@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Bandito_textbaserat
 {
-    internal class Program
+    class Program
     {
         static void Main(string[] args)
         {
@@ -75,28 +75,64 @@ namespace Bandito_textbaserat
             }
 
 
+            //Spel loop
+
+            bool gameAktive = true;
+            List<PlayCard> cardpile = CreateCardPile();
+            while (gameAktive)
+            {
+                Console.WriteLine(cardpile[0].TunnelId);
+                Console.ReadKey();
+            }
 
 
 
             Console.ReadKey();
         }
+
+
+
+
+
+
+
         
-        public List<PlayCard> CreateCardPile()
+        static List<PlayCard> CreateCardPile()
         {
             List<PlayCard> cardPile = new List<PlayCard>();
-            PlayCard ettKort = new PlayCard(0100);
+
+            Random r = new Random();
+            string tmp = "";
+            for (int i = 0; i < 4; i++)
+            {
+                tmp += r.Next(0, 2).ToString();
+            }
+
+
+
+            PlayCard ettKort = new PlayCard(tmp);
+
+
             cardPile.Add(ettKort);
             return cardPile;
         }
 
         public class PlayCard
         {
-            int tunnelId;
+            string tunnelId;
 
-            public PlayCard(int tunnelId)
+            public PlayCard(string tunnelId)
             {
                 this.tunnelId = tunnelId;
             }
+
+            public string TunnelId
+            {
+                get { return tunnelId; }
+
+            }
+
+
         }
     }
 }
