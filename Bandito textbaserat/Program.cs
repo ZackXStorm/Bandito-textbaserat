@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 
 namespace Bandito_textbaserat
 {
+
     class Program
     {
+        public static Random r = new Random();
+
         static void Main(string[] args)
         {
-            // Meny
             
+            // Meny
+
             bool validMenuInput = false;
             while (!validMenuInput)
             {
@@ -75,13 +79,21 @@ namespace Bandito_textbaserat
             }
 
 
-            //Spel loop
+            // Create game field
+            
+            
+            int[,] gameField = new int[1, 1];
+
+            // Fyll arrayen med koordinater
+            
+
+            //Game loop
 
             bool gameAktive = true;
-            List<PlayCard> cardpile = CreateCardPile();
+            List<PlayCard> cardPile = CreateCardPile();
             while (gameAktive)
             {
-                Console.WriteLine(cardpile[0].TunnelId);
+                Console.WriteLine(cardPile[0].TunnelId);
                 Console.ReadKey();
             }
 
@@ -95,42 +107,112 @@ namespace Bandito_textbaserat
 
 
 
+        static void SkrivTest()
+        {
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    gameField[i, j] = CreateCard().TunnelId; // Spara koordinaterna som en sträng
+                }
+            }
 
+            // Skriv ut arrayen i konsolen
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < cols; j++)
+                {
+                    Console.Write(gameField[i, j] + " ");
+                }
+                Console.WriteLine(); // Ny rad efter varje rad i arrayen
+            }
+
+            Console.ReadKey();
+            Environment.Exit(0);
+        }
         
         static List<PlayCard> CreateCardPile()
         {
             List<PlayCard> cardPile = new List<PlayCard>();
 
-            Random r = new Random();
+            for (int i =0; i < 68; i++)
+            {
+                PlayCard card = CreateCard();
+                cardPile.Add(card);
+            }
+            
+            return cardPile;
+        }
+
+        static PlayCard CreateCard()
+        {
+            
             string tmp = "";
             for (int i = 0; i < 4; i++)
             {
-                tmp += r.Next(0, 2).ToString();
+                tmp += r.Next(1, 3).ToString();
             }
 
+            
 
 
-            PlayCard ettKort = new PlayCard(tmp);
+            PlayCard card = new PlayCard(int.Parse(tmp));
+            return card;
 
 
-            cardPile.Add(ettKort);
-            return cardPile;
         }
 
         public class PlayCard
         {
-            string tunnelId;
+            int tunnelId;
 
-            public PlayCard(string tunnelId)
+            public PlayCard(int tunnelId)
             {
                 this.tunnelId = tunnelId;
             }
 
-            public string TunnelId
+            public int TunnelId
             {
                 get { return tunnelId; }
 
             }
+
+
+        }
+
+        public class Player
+        {
+            string name;
+            int playTurnNumber;
+            List<PlayCard> playerCards;
+
+
+            public Player(string name, int playTurnNumber)
+            {
+                this.name = name;
+                this.playTurnNumber = playTurnNumber;
+                //this.playerCards = playerCards;
+            }
+            
+
+            public string Name
+            {
+                get { return name; }
+
+            }
+
+            public int PlayTurnNumber
+            {
+                get { return playTurnNumber; }
+            }
+
+            public List<PlayCard> PlayerCards
+            {
+                get { return playerCards; }
+                set { playerCards = value; }
+            }
+
+
 
 
         }
