@@ -13,7 +13,7 @@ namespace Bandito_textbaserat
 
         static void Main(string[] args)
         {
-            
+
             // Meny
 
             bool validMenuInput = false;
@@ -25,7 +25,7 @@ namespace Bandito_textbaserat
                 string menuInput = Console.ReadLine();
 
 
-                
+
 
                 if (menuInput.ToUpper() == "A")
                 {
@@ -38,7 +38,7 @@ namespace Bandito_textbaserat
                     Console.Clear();
                     Console.WriteLine("I är inte tilgänligt\n\n");
                     continue;
-                    
+
                 }
 
                 if (menuInput.ToUpper() == "S")
@@ -47,11 +47,11 @@ namespace Bandito_textbaserat
                     Console.WriteLine("Startar spel\n");
                     validMenuInput = true;
                     continue;
-                    
+
                 }
 
-                
-               
+
+
                 Console.Clear();
                 Console.WriteLine("Invalid input\n\n");
 
@@ -65,7 +65,7 @@ namespace Bandito_textbaserat
                 Console.WriteLine("Hur många spelare?");
                 string playerCountInput = Console.ReadLine();
 
-                if ( playerCountInput.Length > 1 || !char.IsDigit(playerCountInput[0]) || int.Parse(playerCountInput) > 4 || int.Parse(playerCountInput) <= 0)
+                if (playerCountInput.Length > 1 || !char.IsDigit(playerCountInput[0]) || int.Parse(playerCountInput) > 4 || int.Parse(playerCountInput) <= 0)
                 {
                     Console.Clear();
                     Console.WriteLine("Invalid input\n\n");
@@ -75,26 +75,90 @@ namespace Bandito_textbaserat
                 validPlayerCountInput = !validPlayerCountInput;
                 Console.Clear();
                 Console.WriteLine("Sure, vi kör med " + playerCount + " spelare");
-                
+
             }
 
 
             // Create game field
-            
-            
+
+
             int[,] gameField = new int[1, 1];
 
-            // Fyll arrayen med koordinater
-            
+
+            //SkrivTest(gameField);
+
+
+
+
+
+
+            //Create card pile
+
+            Stack<PlayCard> cardPile = CreateCardPile();
+
+            //SkrivTestCardPile(cardPile);
+
+
+
+
+
+
+
+            //Create players
+
+            Queue<Player> playerQueue = new Queue<Player>();
+            Player activePlayer;
+
+            for (int i = 1; i < playerCount + 1; i++)
+            {
+                Console.WriteLine("Player " + i + " Name:");
+                Player newPlayer = new Player(Console.ReadLine());
+                for (int j = 0; j < 3; j++)
+                {
+                    newPlayer.PlayerCards.Add(cardPile.Pop());
+                }
+
+                playerQueue.Enqueue(newPlayer);
+            }
+
+
+            //Place Super card
+            gameField[1, 1] = 2222;
+
+
 
             //Game loop
 
-            bool gameAktive = true;
-            List<PlayCard> cardPile = CreateCardPile();
-            while (gameAktive)
+
+            Console.Clear();
+
+            List<int> activeFieldCards = new List<int>();
+            activeFieldCards.Add(222211); //add super card. 4 first is tunnel id and the rest are the coordinates in gamefield
+            bool gameActive = true;
+            
+
+            while (gameActive)
             {
-                Console.WriteLine(cardPile[0].TunnelId);
-                Console.ReadKey();
+                activePlayer = playerQueue.Peek();
+
+                if (activePlayer.PlayerCards.Count < 3)
+                {
+                    activePlayer.PlayerCards.Add(cardPile.Pop());
+                    Console.WriteLine(activePlayer.Name + " drog ett kort");
+                    continue;
+                }
+
+                DrawRow();
+
+                Console.WriteLine();
+
+               
+
+
+
+
+
+
             }
 
 
@@ -104,23 +168,42 @@ namespace Bandito_textbaserat
 
 
 
-
-
-
-        static void SkrivTest()
+        static string CalculateActiveTunnels(List<int> activeFieldCards)
         {
-            for (int i = 0; i < rows; i++)
+
+            return "";
+        }
+
+        static void DrawRow()
+        {
+            int consoleWidth = Console.WindowWidth; // Hämtar konsolens bredd
+            Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
+
+        }
+        static void SkrivTestPlayerhand(Player player)
+        {
+            Console.WriteLine(player.Name + ", Dina kort är; ");
+            foreach (PlayCard card in player.PlayerCards)
             {
-                for (int j = 0; j < cols; j++)
+                Console.WriteLine(card.TunnelId);
+            }
+            
+        }
+
+        static void SkrivTest(int[,] gameField)
+        {
+            for (int i = 0; i < gameField.GetLength(0); i++)
+            {
+                for (int j = 0; j < gameField.GetLength(1); j++)
                 {
                     gameField[i, j] = CreateCard().TunnelId; // Spara koordinaterna som en sträng
                 }
             }
 
             // Skriv ut arrayen i konsolen
-            for (int i = 0; i < rows; i++)
+            for (int i = 0; i < gameField.GetLength(0); i++)
             {
-                for (int j = 0; j < cols; j++)
+                for (int j = 0; j < gameField.GetLength(1); j++)
                 {
                     Console.Write(gameField[i, j] + " ");
                 }
@@ -130,15 +213,25 @@ namespace Bandito_textbaserat
             Console.ReadKey();
             Environment.Exit(0);
         }
-        
-        static List<PlayCard> CreateCardPile()
-        {
-            List<PlayCard> cardPile = new List<PlayCard>();
 
-            for (int i =0; i < 68; i++)
+        static void SkrivTestCardPile(Stack<PlayCard> deck)
+        {
+            foreach (PlayCard p in deck)
+            {
+                Console.WriteLine(p.TunnelId);
+            }
+            Console.ReadKey();
+            Environment.Exit(0);
+        }
+        
+        static Stack<PlayCard> CreateCardPile()
+        {
+            Stack<PlayCard> cardPile = new Stack<PlayCard>();
+
+            for (int i =0; i < 69; i++)
             {
                 PlayCard card = CreateCard();
-                cardPile.Add(card);
+                cardPile.Push(card);
             }
             
             return cardPile;
@@ -183,14 +276,14 @@ namespace Bandito_textbaserat
         public class Player
         {
             string name;
-            int playTurnNumber;
-            List<PlayCard> playerCards;
+            
+            List<PlayCard> playerCards = new List<PlayCard>();
 
 
-            public Player(string name, int playTurnNumber)
+            public Player(string name)
             {
                 this.name = name;
-                this.playTurnNumber = playTurnNumber;
+                
                 //this.playerCards = playerCards;
             }
             
@@ -201,10 +294,7 @@ namespace Bandito_textbaserat
 
             }
 
-            public int PlayTurnNumber
-            {
-                get { return playTurnNumber; }
-            }
+            
 
             public List<PlayCard> PlayerCards
             {
