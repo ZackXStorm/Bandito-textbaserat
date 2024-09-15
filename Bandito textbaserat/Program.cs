@@ -82,7 +82,7 @@ namespace Bandito_textbaserat
             // Create game field
 
 
-            int[,] gameField = new int[1, 1];
+            string[,] gameField = new string[1, 2];
 
 
             //SkrivTest(gameField);
@@ -125,8 +125,10 @@ namespace Bandito_textbaserat
             Console.Clear();
 
             //Place Super card
-            gameField[0, 0] = 2222;
-            SkrivTest(gameField);
+            gameField[0, 0] = "2222";
+            gameField[0, 1] = "2212";
+
+            //SkrivTest(gameField);
 
 
             //Game loop
@@ -137,33 +139,43 @@ namespace Bandito_textbaserat
             List<int> activeFieldCards = new List<int>();
             activeFieldCards.Add(222211); //add super card. 4 first is tunnel id and the rest are the coordinates in gamefield
             bool gameActive = true;
+            Console.WriteLine("Splet startar\n");
+
+            while (gameActive)
+            {
+                
+                
+                activePlayer = playerQueue.Peek();
+
+                if (activePlayer.PlayerCards.Count < 3)
+                {
+                    activePlayer.PlayerCards.Add(cardPile.Pop());
+                    Console.WriteLine(activePlayer.Name + " drog ett kort");
+                    continue;
+                }
+
+                
+                DrawRow();
+                Console.WriteLine("Spelplan:\n");
+                TestDrawGameFeild(gameField);
+                DrawRow();
+
+                Console.WriteLine("Din hand:\n");
+                SkrivTestPlayerhand(activePlayer);
+                DrawRow();
+
+                Console.ReadKey();
+                Console.WriteLine();
+                
 
 
-            //while (gameActive)
-            //{
-            //    Console.WriteLine("blaaaa");
-            //    Console.ReadKey();
-            //    activePlayer = playerQueue.Peek();
-
-            //    if (activePlayer.PlayerCards.Count < 3)
-            //    {
-            //        activePlayer.PlayerCards.Add(cardPile.Pop());
-            //        Console.WriteLine(activePlayer.Name + " drog ett kort");
-            //        continue;
-            //    }
-
-            //    //DrawRow();
-
-            //    Console.WriteLine();
 
 
 
 
 
 
-
-
-            //}
+            }
 
             Console.WriteLine("blaaaa");
 
@@ -178,12 +190,12 @@ namespace Bandito_textbaserat
             return "";
         }
 
-        //static void DrawRow()
-        //{
-        //    int consoleWidth = Console.WindowWidth; // Hämtar konsolens bredd
-        //    Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
+        static void DrawRow()
+        {
+            int consoleWidth = Console.WindowWidth; // Hämtar konsolens bredd
+            Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
 
-        //}
+        }
         static void SkrivTestPlayerhand(Player player)
         {
             Console.WriteLine(player.Name + ", Dina kort är; ");
@@ -194,7 +206,7 @@ namespace Bandito_textbaserat
             
         }
 
-        static void SkrivTest(int[,] gameField)
+        static void TestDrawGameFeild(string[,] gameField)
         {
             //for (int i = 0; i < gameField.GetLength(0); i++)
             //{
@@ -203,6 +215,59 @@ namespace Bandito_textbaserat
             //        gameField[i, j] = CreateCard().TunnelId; // Spara koordinaterna som en sträng
             //    }
             //}
+
+            // Skriv ut arrayen i konsolen
+            string tmp = "X";
+            string[] consoleLine = new string[3];
+            
+            for (int i = 0; i < gameField.GetLength(1); i++)
+            {
+                
+
+                for (int j = 0; j < gameField.GetLength(0); j++)
+                {
+                    
+                    for (int lineCheck = 0; lineCheck < 3; lineCheck++)
+                    {
+                        if (lineCheck == 0 || lineCheck == 2)
+                        {
+                            consoleLine[lineCheck] += tmp;
+                            if (lineCheck == 0)
+                            {
+                                consoleLine[lineCheck] += (gameField[j, i].Substring(0, 1) == "2") ? " " : tmp;
+
+                            }
+                            else
+                            {
+                                consoleLine[lineCheck] += (gameField[j, i].Substring(2, 1) == "2") ? " " : tmp;
+                            }
+                            consoleLine[lineCheck] += tmp;
+
+                        }
+                        else
+                        {
+                            consoleLine[lineCheck] += (gameField[j, i].Substring(3, 1) == "2") ? " " : tmp;
+                            consoleLine[lineCheck] += " ";
+                            consoleLine[lineCheck] += (gameField[j, i].Substring(1, 1) == "2") ? " " : tmp;
+                        }
+                        
+                    }
+                    for (int p = 0; p <3; p++)
+                    {
+                        Console.WriteLine(consoleLine[p]);
+                        consoleLine[p] = "";
+                    }
+                    
+                    
+                }
+                
+            }
+
+            
+        }
+        static void TestDrawGameFeild2(int[,] gameField)
+        {
+            
 
             // Skriv ut arrayen i konsolen
             for (int i = 0; i < gameField.GetLength(0); i++)
@@ -214,9 +279,9 @@ namespace Bandito_textbaserat
                 Console.WriteLine(); // Ny rad efter varje rad i arrayen
             }
 
-            Console.ReadKey();
-            Environment.Exit(0);
+
         }
+
 
         static void SkrivTestCardPile(Stack<PlayCard> deck)
         {
@@ -245,9 +310,26 @@ namespace Bandito_textbaserat
         {
             
             string tmp = "";
+            int numberOfTunelOpenings = 0;
             for (int i = 0; i < 4; i++)
             {
-                tmp += r.Next(1, 3).ToString();
+                //if (numberOfTunelOpenings >= 3) // Finns det ett kort med "2222" ??
+                //{
+                //    break;
+                //}
+                if (i == 3 &&  numberOfTunelOpenings == 0) // inga kort ska ha "1111"
+                {
+                    tmp += 2;
+                    break;
+                }
+                if (r.Next(1, 3) == 2)
+                {
+                    tmp += 2;
+                    numberOfTunelOpenings++;
+                    continue;
+                }
+                tmp += 1;
+                
             }
 
             
