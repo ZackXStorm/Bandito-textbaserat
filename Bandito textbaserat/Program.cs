@@ -107,12 +107,13 @@ namespace Bandito_textbaserat
             //Create players
 
             Queue<Player> playerQueue = new Queue<Player>();
+            Player newPlayer;
             Player activePlayer;
 
-            for (int i = 1; i < playerCount + 1; i++)
+            for (int i = 1; i < (playerCount + 1); i++)
             {
                 Console.WriteLine("Player " + i + " Name:");
-                Player newPlayer = new Player(Console.ReadLine());
+                newPlayer = new Player(Console.ReadLine());
                 for (int j = 0; j < 3; j++)
                 {
                     newPlayer.PlayerCards.Add(cardPile.Pop());
@@ -121,47 +122,50 @@ namespace Bandito_textbaserat
                 playerQueue.Enqueue(newPlayer);
             }
 
+            Console.Clear();
 
             //Place Super card
-            gameField[1, 1] = 2222;
-
+            gameField[0, 0] = 2222;
+            SkrivTest(gameField);
 
 
             //Game loop
 
 
-            Console.Clear();
+
 
             List<int> activeFieldCards = new List<int>();
             activeFieldCards.Add(222211); //add super card. 4 first is tunnel id and the rest are the coordinates in gamefield
             bool gameActive = true;
-            
-
-            while (gameActive)
-            {
-                activePlayer = playerQueue.Peek();
-
-                if (activePlayer.PlayerCards.Count < 3)
-                {
-                    activePlayer.PlayerCards.Add(cardPile.Pop());
-                    Console.WriteLine(activePlayer.Name + " drog ett kort");
-                    continue;
-                }
-
-                DrawRow();
-
-                Console.WriteLine();
-
-               
 
 
+            //while (gameActive)
+            //{
+            //    Console.WriteLine("blaaaa");
+            //    Console.ReadKey();
+            //    activePlayer = playerQueue.Peek();
+
+            //    if (activePlayer.PlayerCards.Count < 3)
+            //    {
+            //        activePlayer.PlayerCards.Add(cardPile.Pop());
+            //        Console.WriteLine(activePlayer.Name + " drog ett kort");
+            //        continue;
+            //    }
+
+            //    //DrawRow();
+
+            //    Console.WriteLine();
 
 
 
 
-            }
 
 
+
+
+            //}
+
+            Console.WriteLine("blaaaa");
 
             Console.ReadKey();
         }
@@ -174,12 +178,12 @@ namespace Bandito_textbaserat
             return "";
         }
 
-        static void DrawRow()
-        {
-            int consoleWidth = Console.WindowWidth; // Hämtar konsolens bredd
-            Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
+        //static void DrawRow()
+        //{
+        //    int consoleWidth = Console.WindowWidth; // Hämtar konsolens bredd
+        //    Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
 
-        }
+        //}
         static void SkrivTestPlayerhand(Player player)
         {
             Console.WriteLine(player.Name + ", Dina kort är; ");
@@ -192,13 +196,13 @@ namespace Bandito_textbaserat
 
         static void SkrivTest(int[,] gameField)
         {
-            for (int i = 0; i < gameField.GetLength(0); i++)
-            {
-                for (int j = 0; j < gameField.GetLength(1); j++)
-                {
-                    gameField[i, j] = CreateCard().TunnelId; // Spara koordinaterna som en sträng
-                }
-            }
+            //for (int i = 0; i < gameField.GetLength(0); i++)
+            //{
+            //    for (int j = 0; j < gameField.GetLength(1); j++)
+            //    {
+            //        gameField[i, j] = CreateCard().TunnelId; // Spara koordinaterna som en sträng
+            //    }
+            //}
 
             // Skriv ut arrayen i konsolen
             for (int i = 0; i < gameField.GetLength(0); i++)
