@@ -167,7 +167,9 @@ namespace Bandito_textbaserat
 
 
 
-            List<int> activeFieldCards = new List<int>();
+            List<int> activeFieldCards = new List<int>(); //!!! Gör om till ett array som inehåller alla cells som tunlar går till
+
+
             activeFieldCards.Add(222211); //add super card. 4 first is tunnel id and the rest are the coordinates in gamefield
             bool gameActive = true;
             Console.WriteLine("\tSplet startar");
@@ -221,6 +223,11 @@ namespace Bandito_textbaserat
                     case State.WhichDirectionRotate:
                         {
                             WhichDirectionRotate(selectedCard);
+                            continue;
+                        }
+                    case State.WherePlaceCard:
+                        {
+
                             continue;
                         }
 
@@ -307,6 +314,16 @@ namespace Bandito_textbaserat
             {
                 activePlayer.PlayerCards[selectedCard].TunnelId += activePlayer.PlayerCards[selectedCard].TunnelId.Substring(0, 1);
                 activePlayer.PlayerCards[selectedCard].TunnelId = activePlayer.PlayerCards[selectedCard].TunnelId.Remove(0, 1);
+            }
+        }
+
+        static void WherePlaceCard()
+        {
+            Console.WriteLine("URDL?");
+            string input = Console.ReadLine();
+            switch (input)
+            {
+                case "U"
             }
         }
 
