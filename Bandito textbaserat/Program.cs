@@ -69,16 +69,36 @@ namespace Bandito_textbaserat
                 Console.WriteLine("Hur många spelare?");
                 string playerCountInput = Console.ReadLine();
 
-                if (playerCountInput.Length > 1 || !char.IsDigit(playerCountInput[0]) || int.Parse(playerCountInput) > 4 || int.Parse(playerCountInput) <= 0)
+                if (playerCountInput == "1" || playerCountInput == "2" || playerCountInput == "3" || playerCountInput == "4")
+                {
+                    playerCount = int.Parse(playerCountInput);
+                    validPlayerCountInput = !validPlayerCountInput;
+                    Console.Clear();
+                    Console.WriteLine("Sure, vi kör med " + playerCount + " spelare");
+                }
+                else if (playerCountInput == "0")
+                {
+                    Console.Clear();
+                    Console.WriteLine("Ha ha vary funny");
+                    Console.ReadKey();
+                    Console.WriteLine("You think yore so smart and funny don't ya");
+                    Console.ReadKey();
+                    Console.WriteLine("You know what, screw you");
+                    playerCount = int.Parse(playerCountInput);
+                    Console.WriteLine("Sure, vi KÖÖÖR med " + playerCount + " spelare");
+                    Console.ReadKey();
+                    Console.WriteLine("byyyyyye");
+                    Console.ReadKey();
+                    Environment.Exit(0);
+                }
+
+                else
                 {
                     Console.Clear();
                     Console.WriteLine("Invalid input\n\n");
                     continue;
                 }
-                playerCount = int.Parse(playerCountInput);
-                validPlayerCountInput = !validPlayerCountInput;
-                Console.Clear();
-                Console.WriteLine("Sure, vi kör med " + playerCount + " spelare");
+                
 
             }
 
@@ -86,7 +106,7 @@ namespace Bandito_textbaserat
             // Create game field
 
 
-            string[,] gameField = new string[3, 2];
+            string[,] gameField = new string[1, 1];
 
 
             //SkrivTest(gameField);
@@ -150,7 +170,7 @@ namespace Bandito_textbaserat
             List<int> activeFieldCards = new List<int>();
             activeFieldCards.Add(222211); //add super card. 4 first is tunnel id and the rest are the coordinates in gamefield
             bool gameActive = true;
-            Console.WriteLine("Splet startar");
+            Console.WriteLine("\tSplet startar");
             playerState = State.AskWhatToDo;
             int selectedCard = 0;
             while (gameActive)
@@ -169,11 +189,11 @@ namespace Bandito_textbaserat
 
                 
                 DrawRow();
-                Console.WriteLine("Spelplan:\n");
+                Console.WriteLine("\tSpelplan:");
                 TestDrawGameFeild(gameField);
                 DrawRow();
 
-                Console.WriteLine("Din hand:\n");
+                Console.WriteLine("\tDin hand:");
                 SkrivTestPlayerhand(activePlayer);
                 DrawRow();
 
@@ -203,6 +223,7 @@ namespace Bandito_textbaserat
                             WhichDirectionRotate(selectedCard);
                             continue;
                         }
+
                 }
                 Console.WriteLine();
                 
@@ -383,6 +404,8 @@ namespace Bandito_textbaserat
                 cardPile.Push(card);
             }
             
+            cardPile.OrderBy(x => r.Next()).ToList();
+
             return cardPile;
         }
 
