@@ -15,6 +15,8 @@ namespace Bandito_textbaserat
         static Stack<PlayCard> cardPile;
         static Queue<Player> playerQueue;
         static Player activePlayer;
+        static List<string> tunnelOpenings = new List<string>();
+        static string[,] gameField = new string[1, 1];
         static void Main(string[] args)
         {
 
@@ -106,7 +108,7 @@ namespace Bandito_textbaserat
             // Create game field
 
 
-            string[,] gameField = new string[1, 1];
+            
 
 
             //SkrivTest(gameField);
@@ -149,14 +151,16 @@ namespace Bandito_textbaserat
             Console.Clear();
 
             //Place Super card
-            gameField[0, 0] = "2222";
-
+            //gameField[0, 0] = "2222";
+            PlaceCard("222200");
+            int gamFieldCordOfsettY = 0;
+            int gamFieldCordOfsettX = 0;
 
 
             //gameField[0, 1] = "2212";
             //gameField[1, 0] = "2221";
             //gameField[1, 1] = "1112";
-            
+
             //gameField[2, 0] = "2111";
 
             //SkrivTest(gameField);
@@ -167,10 +171,11 @@ namespace Bandito_textbaserat
 
 
 
-            List<int> activeFieldCards = new List<int>(); //!!! Gör om till ett array som inehåller alla cells som tunlar går till
 
 
-            activeFieldCards.Add(222211); //add super card. 4 first is tunnel id and the rest are the coordinates in gamefield
+
+            
+
             bool gameActive = true;
             Console.WriteLine("\tSplet startar");
             playerState = State.AskWhatToDo;
@@ -321,10 +326,10 @@ namespace Bandito_textbaserat
         {
             Console.WriteLine("URDL?");
             string input = Console.ReadLine();
-            switch (input)
-            {
-                case "U"
-            }
+            //switch (input)
+            //{
+            //    case "U"
+            //}
         }
 
         static string CalculateActiveTunnels(List<int> activeFieldCards)
@@ -400,7 +405,39 @@ namespace Bandito_textbaserat
 
         }
 
+        static void PlaceCard(string placedCard)
+        {
+            int xCordinate = int.Parse(placedCard.Substring(4, 1));
+            int yCordinate = int.Parse(placedCard.Substring(5, 1));
+            string tunnelId = placedCard.Substring(0, 4);
+            gameField[xCordinate,yCordinate] = tunnelId;
 
+            if (yCordinate == 0)
+            {
+                gameField = addrow
+            }
+
+
+            //UpdateTunnelOpenings(placedCard);
+        }
+        static void UpdateTunnelOpenings(string placedCard)
+        {
+            for (int t = 0; t < 3; t++)
+            {
+                if (placedCard.Substring(t, 1) == "2")
+                {
+                    switch (t)
+                    {
+                        case 0:
+                            {
+                                //gameField[placedCard.Substring(4, 1), ]
+                                break;
+                            }
+                    }
+                }
+            }
+            tunnelOpenings.Add(placedCard);
+        }
         static void SkrivTestCardPile(Stack<PlayCard> deck)
         {
             foreach (PlayCard p in deck)
