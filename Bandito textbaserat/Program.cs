@@ -16,7 +16,8 @@ namespace Bandito_textbaserat
         static Queue<Player> playerQueue;
         static Player activePlayer;
         static List<string> tunnelOpenings = new List<string>();
-        static string[,] gameField = new string[1, 1];
+        static string[,] gameField = new string[129, 139];
+        static int GameRound = 1;
         static void Main(string[] args)
         {
 
@@ -152,7 +153,8 @@ namespace Bandito_textbaserat
 
             //Place Super card
             //gameField[0, 0] = "2222";
-            PlaceCard("222200");
+            string placeSupercard = "2222" + gameField.GetLength(0) + gameField.GetLength(1);
+            PlaceCard(placeSupercard);
             int gamFieldCordOfsettY = 0;
             int gamFieldCordOfsettX = 0;
 
@@ -180,18 +182,20 @@ namespace Bandito_textbaserat
             Console.WriteLine("\tSplet startar");
             playerState = State.AskWhatToDo;
             int selectedCard = 0;
+            
             while (gameActive)
             {
-                
-                
+
+                Console.Clear();
+                Console.WriteLine("Game Round: " + GameRound + "\n");
                 activePlayer = playerQueue.Peek();
                 
 
-                if (activePlayer.PlayerCards.Count < 3)
+                while (activePlayer.PlayerCards.Count < 3)
                 {
                     activePlayer.PlayerCards.Add(cardPile.Pop());
                     Console.WriteLine(activePlayer.Name + " drog ett kort");
-                    continue;
+                    
                 }
 
                 
@@ -232,7 +236,7 @@ namespace Bandito_textbaserat
                         }
                     case State.WherePlaceCard:
                         {
-
+                            WherePlaceCard(selectedCard);
                             continue;
                         }
 
@@ -277,13 +281,14 @@ namespace Bandito_textbaserat
         static void NextPlayer()
         {
             playerQueue.Enqueue(playerQueue.Dequeue());
-            
+            playerState = State.AskWhatToDo;
+            GameRound++;
         }
 
         static int WhichCard()
         {
             Console.WriteLine("Which card?");
-            int input =int.Parse( Console.ReadLine());
+            int input = int.Parse( Console.ReadLine()) - 1;
 
             return input;
         }
@@ -305,7 +310,7 @@ namespace Bandito_textbaserat
 
         static void WhichDirectionRotate(int selectedCard)
         {
-            Console.WriteLine("Rotate "+ activePlayer.PlayerCards[selectedCard].TunnelId + "which way?\n[L]eft\n[R]ight");
+            Console.WriteLine("Rotate "+ activePlayer.PlayerCards[selectedCard].TunnelId + " which way?\n[L]eft\n[R]ight\n[B]ack");
             string input = Console.ReadLine();
 
             
@@ -320,16 +325,26 @@ namespace Bandito_textbaserat
                 activePlayer.PlayerCards[selectedCard].TunnelId += activePlayer.PlayerCards[selectedCard].TunnelId.Substring(0, 1);
                 activePlayer.PlayerCards[selectedCard].TunnelId = activePlayer.PlayerCards[selectedCard].TunnelId.Remove(0, 1);
             }
+            if (input.ToUpper() == "B")
+            {
+                playerState = State.WhatDoWithCard;
+            }
         }
 
-        static void WherePlaceCard()
+        static void WherePlaceCard(int selectedCard)
         {
-            Console.WriteLine("URDL?");
+            Console.WriteLine("1 - " + tunnelOpenings.Count());
             string input = Console.ReadLine();
-            //switch (input)
-            //{
-            //    case "U"
-            //}
+
+            int index = int.Parse(input) - 1;
+            string xCordinate = (tunnelOpenings[index].Substring(0, 1));
+            string yCordinate = (tunnelOpenings[index].Substring(1, 1));
+            PlayCard selectedPlaycard = activePlayer.PlayerCards[selectedCard];
+            PlaceCard( selectedPlaycard.TunnelId + xCordinate + yCordinate);
+            activePlayer.PlayerCards.Remove(selectedPlaycard);
+
+            NextPlayer();
+
         }
 
         static string CalculateActiveTunnels(List<int> activeFieldCards)
@@ -356,8 +371,9 @@ namespace Bandito_textbaserat
 
         static void TestDrawGameFeild(string[,] gameField)
         {
-            
 
+            int nummerTunnlar = 1;
+            tunnelOpenings.Clear();
             string tmp = "#";
             int numRows = gameField.GetLength(0);
             int numCols = gameField.GetLength(1);
@@ -377,14 +393,53 @@ namespace Bandito_textbaserat
                 // För varje cell i raden, bygg hela 3x3 rutan
                 for (int i = 0; i < numCols; i++)
                 {
+                    string top;
+                    string middle;
+                    string bottom;
                     string cell = gameField[j, i];
-                    if (cell == null) continue;
+                    //if (cell == null)
+                    //{
+                    //    continue;
+                    //}
 
+                    if (cell == null)
+                    {
+                        if (i == 0 && gameField[j, i + 1] != "O")
+                        {
+                            top = "   ";
+                            middle = "   ";
+                            bottom = "   ";
+                        }
+                        else
+                        {
+                            continue;
+                        }
 
-                    // Bygg den horisontella raden för cellen
-                    string top = tmp + (cell.Substring(0, 1) == "2" ? " " : tmp) + tmp;
-                    string middle = (cell.Substring(3, 1) == "2" ? " " : tmp) + " " + (cell.Substring(1, 1) == "2" ? " " : tmp);
-                    string bottom = tmp + (cell.Substring(2, 1) == "2" ? " " : tmp) + tmp;
+                    }
+
+                    else if (cell == "O")
+                    {
+                        // Bygg en kvadrat med '1' i mitten
+                        top = "|" + "-" + "|";
+                        middle = "|" + nummerTunnlar + "|";
+                        bottom = "|" + "-" + "|";
+                        tunnelOpenings.Add(j + "" + i);
+                        //Console.WriteLine(tunnelOpenings[nummerTunnlar - 1]);
+                        nummerTunnlar++;
+                        
+                        
+                        
+                    }
+                    else
+                    {
+                        // Bygg den horisontella raden för cellen
+                        top = tmp + (cell.Substring(0, 1) == "2" ? " " : tmp) + tmp;
+                        middle = (cell.Substring(3, 1) == "2" ? " " : tmp) + " " + (cell.Substring(1, 1) == "2" ? " " : tmp);
+                        bottom = tmp + (cell.Substring(2, 1) == "2" ? " " : tmp) + tmp;
+                        
+
+                    }
+                    
 
                     // Lägg till cellens rad till rätt plats i consoleLines
                     consoleLines[0] += top;
@@ -395,7 +450,10 @@ namespace Bandito_textbaserat
                 // Lägg till en ny rad efter att ha bearbetat hela raden
                 for (int k = 0; k < 3; k++)
                 {
-                    Console.WriteLine(consoleLines[k]);
+                    if (!string.IsNullOrWhiteSpace(consoleLines[k]))
+                    {
+                        Console.WriteLine(consoleLines[k]);
+                    }
                     consoleLines[k] = "";
                 }
             }
@@ -412,17 +470,17 @@ namespace Bandito_textbaserat
             string tunnelId = placedCard.Substring(0, 4);
             gameField[xCordinate,yCordinate] = tunnelId;
 
-            if (yCordinate == 0)
-            {
-                gameField = addrow
-            }
+            
 
 
-            //UpdateTunnelOpenings(placedCard);
+
+            UpdateTunnelOpenings(placedCard);
         }
         static void UpdateTunnelOpenings(string placedCard)
         {
-            for (int t = 0; t < 3; t++)
+            
+            
+            for (int t = 0; t < 4; t++)
             {
                 if (placedCard.Substring(t, 1) == "2")
                 {
@@ -430,13 +488,34 @@ namespace Bandito_textbaserat
                     {
                         case 0:
                             {
-                                //gameField[placedCard.Substring(4, 1), ]
+                                gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] = "O";
+                                //Console.WriteLine(int.Parse((int.Parse(placedCard.Substring(4, 1))) - 1) + "::" + int.Parse(placedCard.Substring(5, 1)));
                                 break;
+                                
+                            }
+                        case 1:
+                            {
+                                gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] = "O";
+                                //Console.WriteLine(int.Parse(placedCard.Substring(4, 1)) + "::" + int.Parse(placedCard.Substring(5, 1)) + 1);
+                                break;
+                            }
+                        case 2:
+                            {
+                                gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] = "O";
+                                //Console.WriteLine(int.Parse(placedCard.Substring(4, 1)) + 1 + "::" + int.Parse(placedCard.Substring(5, 1)));
+                                break;
+                            }
+                        case 3:
+                            {
+                                gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] = "O";
+                                //Console.WriteLine(int.Parse(placedCard.Substring(4, 1)) + "::" + int.Parse(placedCard.Substring(5, 1)) - 1);
+                                break;
+                                
                             }
                     }
                 }
             }
-            tunnelOpenings.Add(placedCard);
+            //tunnelOpenings.Add(placedCard);
         }
         static void SkrivTestCardPile(Stack<PlayCard> deck)
         {
@@ -497,6 +576,8 @@ namespace Bandito_textbaserat
 
 
         }
+
+
 
         public class PlayCard
         {
