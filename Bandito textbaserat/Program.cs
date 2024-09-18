@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,12 +19,19 @@ namespace Bandito_textbaserat
         static List<string> tunnelOpenings = new List<string>();
         static string[,] gameField = new string[129, 139];
         static int GameRound = 1;
+        static int selectedCard;
         static void Main(string[] args)
         {
 
+            //int windowWidth = Console.LargestWindowWidth;
+            //int windowHeight = Console.LargestWindowHeight;
+
+            //// Ställ in fönstrets storlek
+            //Console.SetWindowSize(windowWidth, windowHeight);
+
             // Meny
 
-            
+
             while (true)
             {
                 Console.WriteLine("Välommen till Bandito\nVad vill du göra?\n\n");
@@ -60,7 +68,7 @@ namespace Bandito_textbaserat
 
 
                 Console.Clear();
-                Console.WriteLine("Invalid input\n\n");
+                WriteInvalid("Invalid input");
 
             }
 
@@ -98,8 +106,7 @@ namespace Bandito_textbaserat
 
                 else
                 {
-                    Console.Clear();
-                    Console.WriteLine("Invalid input\n\n");
+                    WriteInvalid("Invalid input");
                     continue;
                 }
                 
@@ -123,7 +130,7 @@ namespace Bandito_textbaserat
             //Create card pile
 
             cardPile = CreateCardPile();
-
+            
             //SkrivTestCardPile(cardPile);
 
 
@@ -135,8 +142,7 @@ namespace Bandito_textbaserat
             //Create players
 
             playerQueue = new Queue<Player>();
-            Player newPlayer;
-            
+            List<Player> tmpQue = new List<Player>();
 
             for (int i = 1; i < (playerCount + 1); i++)
             {
@@ -146,55 +152,33 @@ namespace Bandito_textbaserat
                     string input = Console.ReadLine();
                     if (IsValidInput(input, true))
                     {
-                        newPlayer = new Player(input);
-                        playerQueue.Enqueue(newPlayer);
+                        
+                        tmpQue.Add(new Player(input));
                         break;
                     }
-                    Console.WriteLine("Invalid Input\n\n");
+                    WriteInvalid("Invalid input");
                 }
-                
-                
-                //for (int j = 0; j < 3; j++)
-                //{
-                //    newPlayer.PlayerCards.Add(cardPile.Pop());
-                //}
+
 
                 
             }
 
+            tmpQue = tmpQue.OrderBy(x => r.Next()).ToList();
+            playerQueue = new Queue<Player>(tmpQue);
+
             Console.Clear();
 
+
             //Place Super card
-            //gameField[0, 0] = "2222";
             string placeSupercard = "2222" + (gameField.GetLength(0) / 2) + (gameField.GetLength(1) / 2);
             PlaceCard(placeSupercard);
-            //int gamFieldCordOfsettY = 0;
-            //int gamFieldCordOfsettX = 0;
-
-
-            //gameField[0, 1] = "2212";
-            //gameField[1, 0] = "2221";
-            //gameField[1, 1] = "1112";
-
-            //gameField[2, 0] = "2111";
-
-            //SkrivTest(gameField);
-
-
-            //Game loop
-
-
-
-
-
-
-
             
+   
 
             bool gameActive = true;
             Console.WriteLine("\tSplet startar");
             playerState = State.AskWhatToDo;
-            int selectedCard = 0;
+            selectedCard = 0;
             
             while (gameActive)
             {
@@ -219,9 +203,7 @@ namespace Bandito_textbaserat
                 Console.WriteLine(" (Active tunnels: " + tunnelOpenings.Count + ")");
                 DrawRow();
 
-                Console.WriteLine("\tDin hand:");
-                SkrivTestPlayerhand(activePlayer);
-                DrawRow();
+                
 
                 if (tunnelOpenings.Count <= 0)
                 {
@@ -232,36 +214,44 @@ namespace Bandito_textbaserat
                 {
                     case State.AskWhatToDo:
                         {
+                            Console.WriteLine("\tDin hand:");
+                            SkrivTestPlayerhand(activePlayer);
+                            DrawRow();
                             AskWhatToDo();
                             break;
                             
                         }
                     case State.WhichCard:
                         {
-                            selectedCard = WhichCard();
-                            if (selectedCard == -10)
-                            {
-                                Console.WriteLine("Invalid");
-                            }
-                            else
-                            {
-                                playerState = State.WhatDoWithCard;
-                            }
+                            Console.WriteLine("\tDin hand:");
+                            SkrivTestPlayerhand(activePlayer);
+                            DrawRow();
+                            WhichCard();
+                            
                             break;
                         }
                     case State.WhatDoWithCard:
                         {
+                            Console.WriteLine("\tSecelcted card:");
+                            SkrivTestPlayerhand(activePlayer, true);
+                            DrawRow();
                             WhatDoWithCard();
                             break;
                         }
                     case State.WhichDirectionRotate:
                         {
+                            Console.WriteLine("\tSecelcted card:");
+                            SkrivTestPlayerhand(activePlayer, true);
+                            DrawRow();
                             WhichDirectionRotate(selectedCard);
                             break;
                         }
                     case State.WherePlaceCard:
                         {
-                            
+                            Console.WriteLine("\tSecelcted card:");
+                            SkrivTestPlayerhand(activePlayer, true);
+                            DrawRow();
+
                             if (WherePlaceCard(selectedCard))
                             {
                                 Console.Clear();
@@ -269,16 +259,15 @@ namespace Bandito_textbaserat
                             }
                             else
                             {
-                                Console.Clear();
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine("Invalid card place\n");
-                                Console.ResetColor();
+                                WriteInvalid("Invalid input or rule breake");
                                 break;
                             }
                             
                         }
 
                 }
+
+                
                 
                 
                 
@@ -299,24 +288,36 @@ namespace Bandito_textbaserat
             Console.ReadKey();
         }
 
+        static void WriteInvalid(string resson)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(resson + "\n");
+            Console.ResetColor();
+        }
         static void AskWhatToDo()
         {
-            string menuString = "[D]raw cards\n[P]lace Card";
+            string menuString = "[D]raw cards\n[S]elect card to play";
             Console.WriteLine(menuString); 
             string input = Console.ReadLine();
             if (input.ToUpper() == "D")
             {
-                
+                Console.Clear();
                 
                 activePlayer.PlayerCards.Clear();
-
+                Console.Clear();
                 NextPlayer();
                 Console.WriteLine("Nästa spelare");
+                return;
             }
-            if (input.ToUpper() == "P")
+            if (input.ToUpper() == "S")
             {
+                Console.Clear();
                 playerState = State.WhichCard;
+                return;
             }
+
+            else WriteInvalid("Invalid input");
         }
 
         static void NextPlayer()
@@ -326,61 +327,96 @@ namespace Bandito_textbaserat
             GameRound++;
         }
 
-        static int WhichCard()
+        static void WhichCard()
         {
-            Console.WriteLine("Which card?");
+            Console.WriteLine("Which card?\nOr [B]ack");
             string input = Console.ReadLine();
+            if (IsValidInput(input, true) && input.ToUpper() == "B")
+            {
+                Console.Clear();
+                playerState = State.AskWhatToDo;
+                return;
+            }
             if (!IsValidInput(input, false, "1-3"))
             {
-                return -10;
+                WriteInvalid("Invalid input");
+                return;
             }
-             
 
-            return int.Parse(input) - 1;
+            Console.Clear();
+            playerState = State.WhatDoWithCard;
+            selectedCard = int.Parse(input) - 1;
+
+            
         }
 
         static void WhatDoWithCard()
         {
-            Console.WriteLine("[R]otate\n[P]lace");
+            Console.WriteLine("[R]otate\n[P]lace\n[B]ack");
             string input = Console.ReadLine();
 
             if (input.ToUpper() == "R")
             {
                 playerState = State.WhichDirectionRotate;
+                return;
             }
             if (input.ToUpper() == "P")
             {
                 playerState = State.WherePlaceCard;
+                return;
             }
+            if (input.ToUpper() == "B")
+            {
+                playerState = State.WhichCard;
+                return;
+            }
+
+            WriteInvalid("Invalid input");
+
         }
 
         static void WhichDirectionRotate(int selectedCard)
         {
-            Console.WriteLine("Rotate "+ activePlayer.PlayerCards[selectedCard].TunnelId + " which way?\n[L]eft\n[R]ight\n[P]lace");
+            Console.WriteLine("Rotate "+ activePlayer.PlayerCards[selectedCard].TunnelId + " which way?\n[L]eft\n[R]ight\n[P]lace\nOr [B]ack");
             string input = Console.ReadLine();
 
             
 
-            if (input.ToUpper() == "R")
+            if (input.ToUpper() == "L")
             {
                 activePlayer.PlayerCards[selectedCard].TunnelId = activePlayer.PlayerCards[selectedCard].TunnelId.Substring(3, 1) + activePlayer.PlayerCards[selectedCard].TunnelId.Substring(0, 3);
                 activePlayer.PlayerCards[selectedCard].TunnelId.Remove(3);
+                return;
             }
-            if (input.ToUpper() == "L")
+            if (input.ToUpper() == "R")
             {
                 activePlayer.PlayerCards[selectedCard].TunnelId += activePlayer.PlayerCards[selectedCard].TunnelId.Substring(0, 1);
                 activePlayer.PlayerCards[selectedCard].TunnelId = activePlayer.PlayerCards[selectedCard].TunnelId.Remove(0, 1);
+                return;
             }
             if (input.ToUpper() == "P")
             {
                 playerState = State.WherePlaceCard;
+                return;
             }
+            if (input.ToUpper() == "B")
+            {
+                playerState = State.WhatDoWithCard;
+                return;
+            }
+
+            WriteInvalid("Invalid input");
         }
 
         static bool WherePlaceCard(int selectedCard)
         {
-            Console.WriteLine("1 - " + tunnelOpenings.Count());
+            Console.WriteLine("1 - " + tunnelOpenings.Count() +"\nOr [B]ack");
             string input = Console.ReadLine();
+            if (input.ToUpper() == "B")
+            {
+                playerState = State.WhatDoWithCard;
+                return true;
+            }
             if (!IsValidInput(input, false, "1-" + tunnelOpenings.Count()))
             {
                 return false;
@@ -413,13 +449,29 @@ namespace Bandito_textbaserat
             Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
 
         }
-        static void SkrivTestPlayerhand(Player player)
+        static void SkrivTestPlayerhand(Player player, bool onlySelectedCard = false)
         {
-            Console.WriteLine(player.Name + ", Dina kort är; ");
-            foreach (PlayCard card in player.PlayerCards)
+            if ( !onlySelectedCard)
             {
-                Console.WriteLine(card.TunnelId);
+                Console.WriteLine(player.Name + ", Dina kort är; ");
             }
+            
+            string[] consoleLines = new string[3];
+            
+            for (int i = 0; i < activePlayer.PlayerCards.Count; i++)
+            {
+                if (onlySelectedCard && i != selectedCard) continue;
+
+                string[] tmpLines = GetCellData(activePlayer.PlayerCards[i].TunnelId, true);
+                
+                consoleLines[0] += tmpLines[0];
+                consoleLines[1] += tmpLines[1];
+                consoleLines[2] += tmpLines[2];
+            }
+            
+            DrawCells(consoleLines);
+
+
             
         }
 
@@ -429,7 +481,7 @@ namespace Bandito_textbaserat
 
             int nummerTunnlar = 1;
             tunnelOpenings.Clear();
-            string tmp = "#";
+            
             int numRows = gameField.GetLength(0);
             int numCols = gameField.GetLength(1);
 
@@ -509,11 +561,11 @@ namespace Bandito_textbaserat
                     }
                     else
                     {
-                        // Bygg den horisontella raden för cellen
-                        top = tmp + (cell.Substring(0, 1) == "2" ? " " : tmp) + tmp;
-                        middle = (cell.Substring(3, 1) == "2" ? " " : tmp) + " " + (cell.Substring(1, 1) == "2" ? " " : tmp);
-                        bottom = tmp + (cell.Substring(2, 1) == "2" ? " " : tmp) + tmp;
+                        string[] tmpLines = GetCellData(cell);
                         
+                        top = tmpLines[0];
+                        middle = tmpLines[1];
+                        bottom = tmpLines[2];
 
                     }
 
@@ -526,20 +578,46 @@ namespace Bandito_textbaserat
                 }
 
                 // Lägg till en ny rad efter att ha bearbetat hela raden
-                for (int k = 0; k < 3; k++)
-                {
-                    if (!string.IsNullOrWhiteSpace(consoleLines[k]))
-                    {
-                        Console.WriteLine(consoleLines[k]);
-                    }
-                    consoleLines[k] = "";
-                }
+                DrawCells(consoleLines);
             }
 
 
             
 
         }
+
+        static string[] GetCellData(string cellId, bool devide = false)
+        {
+            string tmp = "#";
+            string[] consoleLines = new string[3];
+            // Bygg den horisontella raden för cellen
+            consoleLines[0] = tmp + (cellId.Substring(0, 1) == "2" ? " " : tmp) + tmp;
+            consoleLines[1] = (cellId.Substring(3, 1) == "2" ? " " : tmp) + " " + (cellId.Substring(1, 1) == "2" ? " " : tmp);
+            consoleLines[2] = tmp + (cellId.Substring(2, 1) == "2" ? " " : tmp) + tmp;
+            if (devide == true)
+            {
+                for (int l = 0; l < consoleLines.Length; l++)
+                {
+                    consoleLines[l] += " | ";
+                }
+            }
+            return consoleLines;
+
+        }
+        static void DrawCells(string[] consoleLines)
+        {
+            for (int k = 0; k < 3; k++)
+            {
+                if (!string.IsNullOrWhiteSpace(consoleLines[k]))
+                {
+                    Console.WriteLine(consoleLines[k]);
+                }
+                consoleLines[k] = "";
+            }
+        }
+
+
+
 
         static bool PlaceCard(string placedCard)
         {
@@ -690,17 +768,17 @@ namespace Bandito_textbaserat
 
         static Stack<PlayCard> CreateCardPile()
         {
-            Stack<PlayCard> cardPile = new Stack<PlayCard>();
+            List<PlayCard> cardPile = new List<PlayCard>();
 
             for (int i =0; i < 69; i++)
             {
                 PlayCard card = CreateCard();
-                cardPile.Push(card);
+                cardPile.Add(card);
             }
             
             cardPile.OrderBy(x => r.Next()).ToList();
 
-            return cardPile;
+            return new Stack<PlayCard>( cardPile);
         }
 
         static PlayCard CreateCard()
