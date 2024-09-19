@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Bandito_textbaserat
 {
 
-    class Program
+    class Program // Btw: "...." betyder att kommenteren fortsätter i nästa kommentar
     {
         static public Random r = new Random();
         public enum State { AwaitingNextPlayer, AskWhatToDo, WhichCard, WhatDoWithCard, WhichDirectionRotate, WherePlaceCard }; // De olika States som en splare kan vara i under spel loopen
@@ -18,10 +18,10 @@ namespace Bandito_textbaserat
         static Player activePlayer; //Spelaren som för tillfälet spelar 
         static string[,] gameField = new string[129, 139]; //gameFild celler kan vara tre saker. 1: null om det är inget i den. 2: ett placerat spel korts tunnelid vilket är ett fyrsiffrigt nummer som beskriver hur tunlarna ser ut åt de fyra vädersträcken. Den går med klockan och börjar norr. ex som första sifran är 1 så har kortet en vägg uppåt, men om det är en 2 så har den en tunnel uppåt. 3: "O", vilket inte markerar ett faktiskt kort utom celler tunnlarna går till
         static List<string> tunnelOpenings = new List<string>(); //Denna list håller koll på kordinaterna på cellerna i gamefield som är "O"
-        static int GameRound = 1;
-        static int selectedCard;
-        static int playerCount;
-        static bool useAwaitingNextPlayer = false; //Denna är till för om du vill skippa hela "awating next palyer" gräjen
+        static int GameRound = 1; // Rundan
+        static int selectedCard; // Vilket kort i spelarens hand dem valt
+        static int playerCount; //Antal spelare
+        static bool useAwaitingNextPlayer; //Denna är till för om du vill skippa hela "awating next palyer" gräjen
         static void Main(string[] args)
         {
 
@@ -110,6 +110,26 @@ namespace Bandito_textbaserat
             Console.Clear() ;
 
 
+            // Frågar om hela "Awating next player" grejen ska hända
+            while (playerCount > 1)
+            {
+                Console.WriteLine("Do you want to use 'Awating next player'\n[Y]es\n[N]o");
+                string input = Console.ReadLine();
+                if (input.ToUpper() == "Y")
+                {
+                    useAwaitingNextPlayer = true;
+                    break;
+                }
+
+                if (input.ToUpper() == "N")
+                {
+                    useAwaitingNextPlayer = false;
+                    break;
+                }
+                Console.Clear();
+                WriteInvalid("Invalid input");
+            }
+            Console.Clear();
 
             //Create card pile
             cardPile = CreateCardPile();
@@ -252,7 +272,7 @@ namespace Bandito_textbaserat
                             }
                             else // annars inte
                             {
-                                WriteInvalid("Invalid input or rule breake");
+                                WriteInvalid("Invalid input or rule break");
                                 break;
                             }
                             
@@ -274,26 +294,27 @@ namespace Bandito_textbaserat
 
             }
 
+            // Om antalet öppna tunlar är = 0 så kommer koden hit 
             DrawRow();
             Console.WriteLine("Du har vunnit !!!!!!!!!!!!!!!!!!!!!");
             Console.ReadKey();
             Console.WriteLine("Tack för att du spelade");
-            Console.ReadKey();
+            Console.ReadKey(); //Spelet är nu slut
         }
 
         static void AwaitingNextPlayer()
         {
             string input = Console.ReadLine();
-            if (input.ToUpper() == "N")
+            if (input.ToUpper() == "N") //Väntar på nästa spelare
             {
                 playerState = State.AskWhatToDo;
             }
         }
-        static void WriteInvalid(string resson) // Denna metod skriver bara ut argument stringen med färgen röd
+        static void WriteInvalid(string reason) // Denna metod skriver bara ut argument stringen med färgen röd
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(resson + "\n");
+            Console.WriteLine(reason + "\n");
             Console.ResetColor();
         }
         static void AskWhatToDo()
@@ -432,11 +453,11 @@ namespace Bandito_textbaserat
                 string yCordinate = tunnelOpenings[index].Substring(1, 1);
                 
                 PlayCard selectedPlaycard = activePlayer.PlayerCards[selectedCard]; //Dett kortet du önskar att spela
-                if (PlaceCard(selectedPlaycard.TunnelId + xCordinate + yCordinate))
+                if (PlaceCard(selectedPlaycard.TunnelId + xCordinate + yCordinate)) 
                 {
-                    activePlayer.PlayerCards.Remove(selectedPlaycard);
+                    activePlayer.PlayerCards.Remove(selectedPlaycard); //Om kortet kan placeras kommer kortet att tas bort från spelarens hand
 
-                    NextPlayer();
+                    NextPlayer(); //Sedan blir det nästa spelares tur 
                     return true;
                 }
                 
@@ -456,7 +477,7 @@ namespace Bandito_textbaserat
         }
         static void DrawPlayerHand(Player player, bool onlySelectedCard = false)
         {
-            if ( !onlySelectedCard)
+            if (!onlySelectedCard)
             {
                 Console.WriteLine(player.Name + ", Dina kort är; ");
             }
@@ -636,8 +657,8 @@ namespace Bandito_textbaserat
             if (ValidCardPlace(tunnelId, xCordinate, yCordinate)) // Kollar om det är lagligt att placera kortet där. Om det är det så placeras kortet, om inte så får spelaren försöka igen
             {
                 
-                gameField[xCordinate, yCordinate] = tunnelId;
-                UpdateTunnelOpenings(placedCard);
+                gameField[xCordinate, yCordinate] = tunnelId; //Om placeringen är valid kommer kortet att placeras .....
+                UpdateTunnelOpenings(placedCard); //... och nya beräkna nya tunnelöpningar
                 return true;
             }
             else
@@ -663,13 +684,13 @@ namespace Bandito_textbaserat
             // Kontrollera om cellen är null
             if (cell != null)
             {
-                //  Denna är lite kompliserad. Den jämnför tunel IDt på det kort du önskar att placera i förhållande till de närliggade cellernas "motsata" tunnel IDn ########
+                //  Denna är lite kompliserad. Den jämnför tunel IDt på det kort du önskar att placera i förhållande till de närliggade cellernas "motsata" tunnel IDn ########. ex så gämförst tunelidÖver[2] mot tunnelidUnder[0], och om dem inte är samma 
 
-                // Kontrollera cellen ovanför
+                // Kontrollera cellen ovanför genom att jämnföra sifran som pekar ner på det kortet över [2] mot sifran som pekar uppåt på kortet under [0]
                 string cellAbove = gameField[xCordinate - 1, yCordinate];
                 if (cellAbove != null && cellAbove.Substring(2, 1) != tunnelId.Substring(0, 1))
                 {
-                    Console.WriteLine("Ovan");
+                    
                     return false;
                 }
 
@@ -677,7 +698,7 @@ namespace Bandito_textbaserat
                 string cellLeft = gameField[xCordinate, yCordinate - 1];
                 if (cellLeft != null && cellLeft.Substring(1, 1) != tunnelId.Substring(3, 1))
                 {
-                    Console.WriteLine("Vänster");
+                    
                     return false;
                 }
 
@@ -685,7 +706,7 @@ namespace Bandito_textbaserat
                 string cellBelow = gameField[xCordinate + 1, yCordinate];
                 if (cellBelow != null && cellBelow.Substring(0, 1) != tunnelId.Substring(2, 1))
                 {
-                    Console.WriteLine("Nedan");
+                    
                     return false;
                 }
 
@@ -693,12 +714,12 @@ namespace Bandito_textbaserat
                 string cellRight = gameField[xCordinate, yCordinate + 1];
                 if (cellRight != null && cellRight.Substring(3, 1) != tunnelId.Substring(1, 1))
                 {
-                    Console.WriteLine("Höger");
+                   
                     return false;
                 }
             }
 
-            // Om alla kontroller är OK eller cellen är null, returnera true
+            // Om alla kontroller är OK eller cellen är null, returnera true. Om inte så kommer placeringen att inte vara valid och då kommer kortet inte att läggas
             return true;
         }
 
@@ -753,7 +774,7 @@ namespace Bandito_textbaserat
             }
             //tunnelOpenings.Add(placedCard);
         }
-        static void SkrivTestCardPile(Stack<PlayCard> deck)
+        static void SkrivTestCardPile(Stack<PlayCard> deck) //Bara en test metod som inte längre används, men om vi ska fortsätta med spelet kan den vara bra att ha senare. Den bara skriver ut alla IDn i kort högen
         {
             foreach (PlayCard p in deck)
             {
@@ -765,7 +786,7 @@ namespace Bandito_textbaserat
 
         static Stack<PlayCard> CreateCardPile()
         {
-            List<PlayCard> cardPile = new List<PlayCard>();
+            List<PlayCard> cardPile = new List<PlayCard>(); //Det är samma anledning här som med playerQueue: OrderBy fungerar bara på en list men jag vill använda en Stack för spelhögen då det passar bäst som det
 
             for (int i =0; i < 69; i++)
             {
@@ -773,22 +794,19 @@ namespace Bandito_textbaserat
                 cardPile.Add(card);
             }
             
-            cardPile.OrderBy(x => r.Next()).ToList();
+            cardPile = cardPile.OrderBy(x => r.Next()).ToList(); //Random ordning
 
-            return new Stack<PlayCard>( cardPile);
+            return new Stack<PlayCard>(cardPile);
         }
 
-        static PlayCard CreateCard()
+        static PlayCard CreateCard() // ###### Läg till korten
         {
             
             string tmp = "";
             int numberOfTunelOpenings = 0;
             for (int i = 0; i < 4; i++)
             {
-                //if (numberOfTunelOpenings >= 3) // Finns det ett kort med "2222" ??
-                //{
-                //    break;
-                //}
+                
                 if (i == 3 &&  numberOfTunelOpenings == 0) // inga kort ska ha "1111"
                 {
                     tmp += 2;
@@ -860,7 +878,7 @@ namespace Bandito_textbaserat
                 {
                     string[] validAlternativs = inputInterval.Split('-');
                     
-                    if (int.Parse(input) >= int.Parse(validAlternativs[0]) && int.Parse(input) <= int.Parse(validAlternativs[1]))
+                    if (int.Parse(input) >= int.Parse(validAlternativs[0]) && int.Parse(input) <= int.Parse(validAlternativs[1])) // Kollar om värdet ligger inom intervallen
                     {
                         validInterval = true;
                     }
@@ -875,7 +893,7 @@ namespace Bandito_textbaserat
 
         public class PlayCard
         {
-            string tunnelId;
+            string tunnelId; // Fyrsifrigt väre som beskriver tunlarna på kortet medurs börjande upifrån: 1 = vägg, och 2 = tunnel öppning
 
             public PlayCard(string tunnelId)
             {
@@ -899,23 +917,24 @@ namespace Bandito_textbaserat
             List<PlayCard> playerCards = new List<PlayCard>();
 
 
-            public Player(string name)
+            public Player(string name) // Jag vill inte tildela Player en lista i kontruktorn när de skaps, men vill fortfrande att de ska kunan kommas åt.....
             {
                 this.name = name;
                 
-                //this.playerCards = playerCards;
+                
             }
             
 
-            public string Name
+            public string Name 
             {
                 get { return name; }
+                //Eftersom namnet på en spelaer inte förändras under spelets gång behövs ingen set
 
             }
 
-            
 
-            public List<PlayCard> PlayerCards
+
+            public List<PlayCard> PlayerCards // .... gemom get set
             {
                 get { return playerCards; }
                 set { playerCards = value; }
