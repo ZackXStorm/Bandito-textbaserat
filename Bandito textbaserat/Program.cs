@@ -25,12 +25,6 @@ namespace Bandito_textbaserat
         static void Main(string[] args)
         {
 
-            //int windowWidth = Console.LargestWindowWidth;
-            //int windowHeight = Console.LargestWindowHeight;
-
-            //// Ställ in fönstrets storlek
-            //Console.SetWindowSize(windowWidth, windowHeight);
-
             // Meny
             while (true)
             {
@@ -116,14 +110,13 @@ namespace Bandito_textbaserat
             Console.Clear() ;
 
 
-            //Create card pile
 
+            //Create card pile
             cardPile = CreateCardPile();
 
 
 
             //Create players and player queue
-
             playerQueue = new Queue<Player>();
             List<Player> tmpQue = new List<Player>();
 
@@ -191,19 +184,19 @@ namespace Bandito_textbaserat
 
                 DrawRow(); // En metod för att bara rita en rad
                 Console.WriteLine("\tSpelplan:");
-                DrawGameFeild(gameField);
+                DrawGameFeild(gameField); //Ritar hur spelpanen ser ut genom att konvertera en cells tunnel id till en 3x3 ruta så att man kan visualesera för spelaren hur korten och spelplanen ser ut.
                 Console.WriteLine(" (Active tunnels: " + tunnelOpenings.Count + ")");
                 DrawRow();
 
 
-                if (tunnelOpenings.Count <= 0)
+                if (tunnelOpenings.Count <= 0) // Om antalet öppna tunnlar = 0 är seplet vunet, men eftersom vi redan har placerat superkortet och gjort alla beräknigar för öpnna tunnlar så spelar det ingen roll att den ligger så här tidigt i game loopen, den kommer ändå inte triggas än  
                 {
-                    break;
+                    break; // Går ut ur while loopen vilket visar vinnar texten
                 }
 
                 switch (playerState)
                 {
-                    case State.AwaitingNextPlayer:
+                    case State.AwaitingNextPlayer: //Denna är för att invänta nästa seplare utan att visa någon information om spelet. Detta för att regelerna är tydlga med att spelare inte ska veta om hur varandras kort ser ut. Så denna State ger spelare tid att byta plats så att de inte ser varandras kort
                         {
                             Console.Clear();
                             Console.WriteLine("\n\nAwaiting next player: " + activePlayer.Name + "\nPress [N] when ready");
@@ -215,7 +208,7 @@ namespace Bandito_textbaserat
                     case State.AskWhatToDo:
                         {
                             Console.WriteLine("\tDin hand:");
-                            DrawPlayerHand(activePlayer);
+                            DrawPlayerHand(activePlayer); //Skriver ut spelarens HELA hand. anlednigen varför den inte ligger 1 gång nedanför gamefild är för att om man valt ett kort i en State så ska bara det kortet skrivas ut
                             DrawRow();
                             AskWhatToDo();
                             break;
@@ -233,7 +226,7 @@ namespace Bandito_textbaserat
                     case State.WhatDoWithCard:
                         {
                             Console.WriteLine("\tSecelcted card:");
-                            DrawPlayerHand(activePlayer, true);
+                            DrawPlayerHand(activePlayer, true); // true betyder att endast det valda kortet i playerHand ska visas
                             DrawRow();
                             WhatDoWithCard();
                             break;
@@ -252,12 +245,12 @@ namespace Bandito_textbaserat
                             DrawPlayerHand(activePlayer, true);
                             DrawRow();
 
-                            if (WherePlaceCard(selectedCard))
+                            if (WherePlaceCard(selectedCard)) // om det retunerar true så var placeringen av kortet lagligt 
                             {
                                 Console.Clear();
                                 break;
                             }
-                            else
+                            else // annars inte
                             {
                                 WriteInvalid("Invalid input or rule breake");
                                 break;
@@ -296,7 +289,7 @@ namespace Bandito_textbaserat
                 playerState = State.AskWhatToDo;
             }
         }
-        static void WriteInvalid(string resson)
+        static void WriteInvalid(string resson) // Denna metod skriver bara ut argument stringen med färgen röd
         {
             Console.Clear();
             Console.ForegroundColor = ConsoleColor.Red;
@@ -308,13 +301,13 @@ namespace Bandito_textbaserat
             string menuString = "[D]raw cards\n[S]elect card to play";
             Console.WriteLine(menuString); 
             string input = Console.ReadLine();
-            if (input.ToUpper() == "D")
+            if (input.ToUpper() == "D") //"Draw cards" är för om spelaren inte kan lägga, vilket då gör att....
             {
                 Console.Clear();
                 
-                activePlayer.PlayerCards.Clear();
+                activePlayer.PlayerCards.Clear(); //...seplaren kastar sin hand och....
                 Console.Clear();
-                NextPlayer();
+                NextPlayer(); // ..... det blir nästa spelares tur. Men spelaren behöver inte dra nya kort här efetrsom det sker i while loopen i början av sin nästa tur
                 Console.WriteLine("Nästa spelare");
                 return;
             }
@@ -330,8 +323,8 @@ namespace Bandito_textbaserat
 
         static void NextPlayer()
         {
-            playerQueue.Enqueue(playerQueue.Dequeue());
-            playerState = useAwaitingNextPlayer ? State.AwaitingNextPlayer : State.AskWhatToDo;
+            playerQueue.Enqueue(playerQueue.Dequeue()); //Spelaren tas bort i början av kön och läggs till sist
+            playerState = useAwaitingNextPlayer ? State.AwaitingNextPlayer : State.AskWhatToDo; // Denna är samma som den innan while loopen för game loop
             GameRound++;
         }
 
@@ -339,15 +332,15 @@ namespace Bandito_textbaserat
         {
             Console.WriteLine("Which card?\nOr [B]ack");
             string input = Console.ReadLine();
-            if (IsValidInput(input, true) && input.ToUpper() == "B")
+            if (IsValidInput(input, true) && input.ToUpper() == "B") 
             {
                 Console.Clear();
-                playerState = State.AskWhatToDo;
+                playerState = State.AskWhatToDo; //Backar till föra Satet 
                 return;
             }
-            if (!IsValidInput(input, false, "1-3"))
+            if (!IsValidInput(input, false, "1-3")) //Om föra isatsen inte triggats, och inte denna heller då.....
             {
-                WriteInvalid("Invalid input");
+                WriteInvalid("Invalid input"); //... är det en invalid input
                 return;
             }
 
@@ -390,14 +383,16 @@ namespace Bandito_textbaserat
 
             
 
-            if (input.ToUpper() == "L")
+            if (input.ToUpper() == "R")
             {
+                //Rotering åt höger sker genom att att sista siffran blir första 
                 activePlayer.PlayerCards[selectedCard].TunnelId = activePlayer.PlayerCards[selectedCard].TunnelId.Substring(3, 1) + activePlayer.PlayerCards[selectedCard].TunnelId.Substring(0, 3);
                 activePlayer.PlayerCards[selectedCard].TunnelId.Remove(3);
                 return;
             }
-            if (input.ToUpper() == "R")
+            if (input.ToUpper() == "L")
             {
+                //Vänster är tvärt om 
                 activePlayer.PlayerCards[selectedCard].TunnelId += activePlayer.PlayerCards[selectedCard].TunnelId.Substring(0, 1);
                 activePlayer.PlayerCards[selectedCard].TunnelId = activePlayer.PlayerCards[selectedCard].TunnelId.Remove(0, 1);
                 return;
@@ -418,23 +413,25 @@ namespace Bandito_textbaserat
 
         static bool WherePlaceCard(int selectedCard)
         {
-            Console.WriteLine("1 - " + tunnelOpenings.Count() +"\nOr [B]ack");
+            Console.WriteLine("1 - " + tunnelOpenings.Count() +"\nOr [B]ack"); //Spelarn ska bara kunan välja 1 till max antal tunnelöpnigar 
             string input = Console.ReadLine();
             if (input.ToUpper() == "B")
             {
                 playerState = State.WhatDoWithCard;
                 return true;
             }
-            if (!IsValidInput(input, false, "1-" + tunnelOpenings.Count()))
+            if (!IsValidInput(input, false, "1-" + tunnelOpenings.Count())) // intervallen i detta fal är 1 till max antal tunnelöpnigar 
             {
                 return false;
             }
             else
             {
-                int index = int.Parse(input) - 1;
-                string xCordinate = tunnelOpenings[index].Substring(0, 1);
+                int index = int.Parse(input) - 1; // Den tunnelöpnigen du önskar att placera ditt kort
+                //Kordinaterna för den cellen
+                string xCordinate = tunnelOpenings[index].Substring(0, 1); 
                 string yCordinate = tunnelOpenings[index].Substring(1, 1);
-                PlayCard selectedPlaycard = activePlayer.PlayerCards[selectedCard];
+                
+                PlayCard selectedPlaycard = activePlayer.PlayerCards[selectedCard]; //Dett kortet du önskar att spela
                 if (PlaceCard(selectedPlaycard.TunnelId + xCordinate + yCordinate))
                 {
                     activePlayer.PlayerCards.Remove(selectedPlaycard);
@@ -535,14 +532,10 @@ namespace Bandito_textbaserat
                     }
 
 
-                    string top;
-                    string middle;
-                    string bottom;
-                    string cell = gameField[j, i];
-                    //if (cell == null)
-                    //{
-                    //    continue;
-                    //}
+                    string top; //Topen på kortet,...
+                    string middle; //...., Mitten...
+                    string bottom; //.... och båten
+                    string cell = gameField[j, i]; //Cellen som ska kollas
 
                     if (cell == null) // Hela tomma culumber har redan hoppats över, denna är till för de tomma cellerna i en culumb/rad som inte är helt tom, bara så att alting ligger på rätt ställa
                     {
@@ -559,7 +552,7 @@ namespace Bandito_textbaserat
                         top = "|" + "-" + "|";
                         middle = "|" + numberOfTunnelOpening + "|";
                         bottom = "|" + "-" + "|";
-                        tunnelOpenings.Add(j + "" + i);
+                        tunnelOpenings.Add(j + "" + i); //Sparar ner kordinatrena för "O" celler
                         numberOfTunnelOpening++;
                         
                         
@@ -567,8 +560,9 @@ namespace Bandito_textbaserat
                     }
                     else
                     {
-                        string[] tmpLines = GetCellData(cell);
+                        string[] tmpLines = GetCellData(cell); // Hämtar hur cellen ser ut över tre rader
                         
+                        // tilder dem
                         top = tmpLines[0];
                         middle = tmpLines[1];
                         bottom = tmpLines[2];
@@ -583,7 +577,7 @@ namespace Bandito_textbaserat
                     consoleLines[2] += bottom;
                 }
 
-                // Lägg till en ny rad efter att ha bearbetat hela raden
+                // Skriv ut de tre raderna för förta raden i gameFild
                 DrawCells(consoleLines);
             }
 
@@ -598,13 +592,14 @@ namespace Bandito_textbaserat
             string[] consoleLines = new string[3];
             // Bygg den horisontella raden för cellen
                 //Hörnen på ett kort är alltid väggar så dem är bara tmp. Mitten är allid öppen. Men det är de fyra vädersträcken som ska kollas om det är "2" vilket gör dem till en öppning, annars är det "1" vilket betyder vägg
-            consoleLines[0] = tmp + (cellId.Substring(0, 1) == "2" ? " " : tmp) + tmp; 
-            consoleLines[1] = (cellId.Substring(3, 1) == "2" ? " " : tmp) + " " + (cellId.Substring(1, 1) == "2" ? " " : tmp);
-            consoleLines[2] = tmp + (cellId.Substring(2, 1) == "2" ? " " : tmp) + tmp;
-            if (devide == true)
+            consoleLines[0] = tmp + (cellId.Substring(0, 1) == "2" ? " " : tmp) + tmp; //Toppen på kortet
+            consoleLines[1] = (cellId.Substring(3, 1) == "2" ? " " : tmp) + " " + (cellId.Substring(1, 1) == "2" ? " " : tmp); // mitten
+            consoleLines[2] = tmp + (cellId.Substring(2, 1) == "2" ? " " : tmp) + tmp; // båten
+            if (devide == true) //Denna används när metoden aktiveras vid utskrivningen av playerHand. det ser bättre ut där om man sepererar korten lite genom....
             {
                 for (int l = 0; l < consoleLines.Length; l++)
                 {
+                    // .... att lägga till en vertikal linje mellan varje kort, och på sidorna längt till vänster och höger
                     consoleLines[l] += " | ";
                     consoleLines[l] = consoleLines[l].Insert(0, " | ");
                 }
@@ -612,11 +607,11 @@ namespace Bandito_textbaserat
             return consoleLines;
 
         }
-        static void DrawCells(string[] consoleLines)
+        static void DrawCells(string[] consoleLines) // Denna togs ut ur drawGameFild() av samma anledning som tidigare
         {
             for (int k = 0; k < 3; k++)
             {
-                if (!string.IsNullOrWhiteSpace(consoleLines[k]))
+                if (!string.IsNullOrWhiteSpace(consoleLines[k])) //Den hoppar över alla helt tomma rader
                 {
                     Console.WriteLine(consoleLines[k]);
                 }
@@ -638,7 +633,7 @@ namespace Bandito_textbaserat
 
 
 
-            if (ValidCardPlace(tunnelId, xCordinate, yCordinate))
+            if (ValidCardPlace(tunnelId, xCordinate, yCordinate)) // Kollar om det är lagligt att placera kortet där. Om det är det så placeras kortet, om inte så får spelaren försöka igen
             {
                 
                 gameField[xCordinate, yCordinate] = tunnelId;
@@ -663,53 +658,43 @@ namespace Bandito_textbaserat
             }
 
             // Hämta cellen på angivna koordinater
-            string tmp = gameField[xCordinate, yCordinate];
+            string cell = gameField[xCordinate, yCordinate];
 
             // Kontrollera om cellen är null
-            if (tmp != null)
+            if (cell != null)
             {
+                //  Denna är lite kompliserad. Den jämnför tunel IDt på det kort du önskar att placera i förhållande till de närliggade cellernas "motsata" tunnel IDn ########
+
                 // Kontrollera cellen ovanför
-                //if (xCordinate > 0)
+                string cellAbove = gameField[xCordinate - 1, yCordinate];
+                if (cellAbove != null && cellAbove.Substring(2, 1) != tunnelId.Substring(0, 1))
                 {
-                    string cellAbove = gameField[xCordinate - 1, yCordinate];
-                    if (cellAbove != null && cellAbove.Substring(2, 1) != tunnelId.Substring(0, 1))
-                    {
-                        Console.WriteLine("Ovan");
-                        return false;
-                    }
+                    Console.WriteLine("Ovan");
+                    return false;
                 }
 
                 // Kontrollera cellen till vänster
-                //if (yCordinate > 0)
+                string cellLeft = gameField[xCordinate, yCordinate - 1];
+                if (cellLeft != null && cellLeft.Substring(1, 1) != tunnelId.Substring(3, 1))
                 {
-                    string cellLeft = gameField[xCordinate, yCordinate - 1];
-                    if (cellLeft != null && cellLeft.Substring(1, 1) != tunnelId.Substring(3, 1))
-                    {
-                        Console.WriteLine("Vänster");
-                        return false;
-                    }
+                    Console.WriteLine("Vänster");
+                    return false;
                 }
 
                 // Kontrollera cellen nedanför
-                //if (xCordinate < gameField.GetLength(0) - 1)
+                string cellBelow = gameField[xCordinate + 1, yCordinate];
+                if (cellBelow != null && cellBelow.Substring(0, 1) != tunnelId.Substring(2, 1))
                 {
-                    string cellBelow = gameField[xCordinate + 1, yCordinate];
-                    if (cellBelow != null && cellBelow.Substring(0, 1) != tunnelId.Substring(2, 1))
-                    {
-                        Console.WriteLine("Nedan");
-                        return false;
-                    }
+                    Console.WriteLine("Nedan");
+                    return false;
                 }
 
                 // Kontrollera cellen till höger
-                //if (yCordinate < gameField.GetLength(1) - 1)
+                string cellRight = gameField[xCordinate, yCordinate + 1];
+                if (cellRight != null && cellRight.Substring(3, 1) != tunnelId.Substring(1, 1))
                 {
-                    string cellRight = gameField[xCordinate, yCordinate + 1];
-                    if (cellRight != null && cellRight.Substring(3, 1) != tunnelId.Substring(1, 1))
-                    {
-                        Console.WriteLine("Höger");
-                        return false;
-                    }
+                    Console.WriteLine("Höger");
+                    return false;
                 }
             }
 
@@ -718,44 +703,48 @@ namespace Bandito_textbaserat
         }
 
 
-        static void UpdateTunnelOpenings(string placedCard)
+        static void UpdateTunnelOpenings(string placedCard) // Denna metod är vad som placerar alla "O" i gameFild. och om du hoppade hit utan att läsa på vad det är, så är det en markering i en cell för att berätta att en öppen tunnel går dit
         {
             
             
-            for (int t = 0; t < 4; t++)
+            for (int t = 0; t < 4; t++) //Kolla alla fyra siffror i tunnel IDt för kortet du precis laggt
             {
 
-                if (placedCard.Substring(t, 1) == "2")
+                if (placedCard.Substring(t, 1) == "2") //Om sifran är 2, aka en tunnelöpning
                 {
-                    switch (t)
+                    switch (t)// Denna är lite komplicerad, men den kollar om den ska/vart placera "O"n runt det placerade kortet genom att kolla om cellerna runt är null, vilket då den ska bli "O", men om de redan har ett väre så finns redan ett kort där eller "O" så då ska det behålla sitt värde
                     {
                         case 0:
                             {
+                                //Kollar cellen åvan
                                 gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] = gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))];
 
-                                //Console.WriteLine(int.Parse((int.Parse(placedCard.Substring(4, 1))) - 1) + "::" + int.Parse(placedCard.Substring(5, 1)));
+                                
                                 break;
                                 
                             }
                         case 1:
                             {
+                                //Cellen till höger
                                 gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] = gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1];
 
-                                //Console.WriteLine(int.Parse(placedCard.Substring(4, 1)) + "::" + int.Parse(placedCard.Substring(5, 1)) + 1);
+                                
                                 break;
                             }
                         case 2:
                             {
+                                //Cellen nedanför
                                 gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] = gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))];
 
-                                //Console.WriteLine(int.Parse(placedCard.Substring(4, 1)) + 1 + "::" + int.Parse(placedCard.Substring(5, 1)));
+                                
                                 break;
                             }
                         case 3:
                             {
+                                //Cellen till höger
                                 gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] = gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1];
 
-                                //Console.WriteLine(int.Parse(placedCard.Substring(4, 1)) + "::" + int.Parse(placedCard.Substring(5, 1)) - 1);
+                                
                                 break;
                                 
                             }
@@ -825,33 +814,33 @@ namespace Bandito_textbaserat
         }
 
 
-        static bool IsValidInput(string input, bool onlyText, string inputInterval = "")
+        static bool IsValidInput(string input, bool onlyText, string inputInterval = "") //Detta är en metod jag använder för att kolla spelar input. 1: string input är spelar input. 2: bool onlyText är om metoden ska kolla om det endast är text i inputen, om den är false kollar den istället om det endast är siffror. string inputInterval är ett frivilig argument och är typ bara för siffer koll, den är en intervall som gör att sifran endast får vara mellan lägsta till högsta sifran
         {
-            if (string.IsNullOrEmpty(input) || input.Length > 10)
+            if (string.IsNullOrEmpty(input) || input.Length > 20) // om inputen är tom är det invalid. Men om den är längre en 20 karaktärer är det också det
             {
                 return false; // Om input är null eller tom, returnera false
             }
-            bool corectType = false;
-            bool validInterval = false;
-            bool checkValidInput = true;
-            if (inputInterval == "")
+            bool corectType = false; // Är det endast siffror/bokstäver ?
+            bool validInterval = false; // Är det inom intervallen ?
+            bool checkValidInterval = true; // ska inetrval kollas ?.....
+            if (inputInterval == "") //.... om den är tom, då nej
             {
-                checkValidInput = false;
-                validInterval = true;
+                checkValidInterval = false;
+                validInterval = true; // om det inte finns någon inervall att kolla, så vist, då är den inanför "intervallen"
             }
 
-            if (onlyText)
+            if (onlyText) // Kolla om bara bokstäver
             {
                 // Kontrollera om input endast innehåller bokstäver
                 corectType = input.All(char.IsLetter);
 
-
-                if (checkValidInput && corectType)
+                // För tillfälet tror jag att intervaller inte används för bokstäver då det kollas med en if satser direkt, men den kanske blir användbar i ett annat projekt
+                if (checkValidInterval && corectType) // Om den är inanför inetervallen är irelevent om corectType = false, för då är det invalid input
                 {
-                    string[] validAlternativs = input.Split(':');
-                    foreach (string s in validAlternativs)
+                    string[] validAlternativs = input.Split(':'); //Sakpar en "lista" med alla alternavit som är valid
+                    foreach (string s in validAlternativs) 
                     {
-                        if (input.ToUpper() == s)
+                        if (input.ToUpper() == s) //Kollar om inputen machar några av de "valid" alternativen
                         {
                             validInterval = true;
                             break;
@@ -860,14 +849,14 @@ namespace Bandito_textbaserat
                     
                 }
 
-                return corectType && validInterval;
+                
             }
             else
             {
                 // Kontrollera om input endast innehåller siffror
                 corectType = input.All(char.IsDigit);
 
-                if (checkValidInput && corectType)
+                if (checkValidInterval && corectType)
                 {
                     string[] validAlternativs = inputInterval.Split('-');
                     
@@ -878,8 +867,9 @@ namespace Bandito_textbaserat
 
                 }
 
-                return corectType && validInterval;
+                
             }
+            return corectType && validInterval;
         }
 
 
