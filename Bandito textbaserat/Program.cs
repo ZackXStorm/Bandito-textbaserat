@@ -11,15 +11,17 @@ namespace Bandito_textbaserat
     class Program
     {
         static public Random r = new Random();
-        public enum State { AskWhatToDo, WhichCard, WhatDoWithCard, WhichDirectionRotate, WherePlaceCard };
-        public static State playerState;
+        public enum State { AwaitingNextPlayer, AskWhatToDo, WhichCard, WhatDoWithCard, WhichDirectionRotate, WherePlaceCard }; // De olika States som en splare kan vara i under spel loopen
+        public static State playerState; // Det aktiva statet
         static Stack<PlayCard> cardPile;
         static Queue<Player> playerQueue;
-        static Player activePlayer;
-        static List<string> tunnelOpenings = new List<string>();
-        static string[,] gameField = new string[129, 139];
+        static Player activePlayer; //Spelaren som för tillfälet spelar 
+        static string[,] gameField = new string[129, 139]; //gameFild celler kan vara tre saker. 1: null om det är inget i den. 2: ett placerat spel korts tunnelid vilket är ett fyrsiffrigt nummer som beskriver hur tunlarna ser ut åt de fyra vädersträcken. Den går med klockan och börjar norr. ex som första sifran är 1 så har kortet en vägg uppåt, men om det är en 2 så har den en tunnel uppåt. 3: "O", vilket inte markerar ett faktiskt kort utom celler tunnlarna går till
+        static List<string> tunnelOpenings = new List<string>(); //Denna list håller koll på kordinaterna på cellerna i gamefield som är "O"
         static int GameRound = 1;
         static int selectedCard;
+        static int playerCount;
+        static bool useAwaitingNextPlayer = false; //Denna är till för om du vill skippa hela "awating next palyer" gräjen
         static void Main(string[] args)
         {
 
@@ -30,12 +32,10 @@ namespace Bandito_textbaserat
             //Console.SetWindowSize(windowWidth, windowHeight);
 
             // Meny
-
-
             while (true)
             {
                 Console.WriteLine("Välommen till Bandito\nVad vill du göra?\n\n");
-                string menuText = "[S] tarta nyt spelet:\n\n[I] nstructions\n\n[A] vsluta"; //Meny text
+                string menuText = "[S]tarta nyt spelet:\n\n[I]nstructions\n\n[A]vsluta"; //Meny text
                 Console.WriteLine(menuText);
                 string menuInput = Console.ReadLine();
 
@@ -52,7 +52,7 @@ namespace Bandito_textbaserat
                 {
                     Console.Clear();
                     Console.WriteLine("I är inte tilgänligt\n\n");
-                    break;
+                    
 
                 }
 
@@ -74,7 +74,8 @@ namespace Bandito_textbaserat
 
 
             
-            int playerCount = 0;
+            
+            // Ask input of player count
             while (true)
             {
                 Console.WriteLine("Hur många spelare?");
@@ -112,34 +113,16 @@ namespace Bandito_textbaserat
                 
 
             }
-
-
-            // Create game field
-
-
-            
-
-
-            //SkrivTest(gameField);
-
-
-
-
+            Console.Clear() ;
 
 
             //Create card pile
 
             cardPile = CreateCardPile();
-            
-            //SkrivTestCardPile(cardPile);
 
 
 
-
-
-
-
-            //Create players
+            //Create players and player queue
 
             playerQueue = new Queue<Player>();
             List<Player> tmpQue = new List<Player>();
@@ -150,7 +133,17 @@ namespace Bandito_textbaserat
                 {
                     Console.WriteLine("Player " + i + " Name:");
                     string input = Console.ReadLine();
-                    if (IsValidInput(input, true))
+                    bool nameAlredyExist = false;
+                    foreach (Player p in tmpQue)
+                    {
+                        if (input.ToUpper() == p.Name.ToUpper())
+                        {
+                            nameAlredyExist = true;
+                            break;
+                        }
+
+                    }
+                    if (IsValidInput(input, true) && !nameAlredyExist)
                     {
                         
                         tmpQue.Add(new Player(input));
@@ -163,47 +156,45 @@ namespace Bandito_textbaserat
                 
             }
 
-            tmpQue = tmpQue.OrderBy(x => r.Next()).ToList();
+            tmpQue = tmpQue.OrderBy(x => r.Next()).ToList(); // Detta är varför jag behövde använda en tmp lista, för att orderBy inte fungerar på en Stack. Men eftersom en Stack är väldigt bra som en player queue ville jag fortfrande använda det
             playerQueue = new Queue<Player>(tmpQue);
 
             Console.Clear();
 
 
+
             //Place Super card
-            string placeSupercard = "2222" + (gameField.GetLength(0) / 2) + (gameField.GetLength(1) / 2);
+            string placeSupercard = "2222" + (gameField.GetLength(0) / 2) + (gameField.GetLength(1) / 2); //Plaserar den i mitten av gameField
             PlaceCard(placeSupercard);
             
    
 
-            bool gameActive = true;
+            // Game Loop
             Console.WriteLine("\tSplet startar");
-            playerState = State.AskWhatToDo;
-            selectedCard = 0;
+            playerState = useAwaitingNextPlayer ? State.AwaitingNextPlayer : State.AskWhatToDo; //Om vi ska använda AwaitingNextPlayer eller inte
+            selectedCard = 1; // Detta är bara för att det ska vara något så att den aldrig kan vara null (aka felhantering)
             
-            while (gameActive)
+            while (true)
             {
 
-                //Console.Clear();
                 Console.WriteLine("Game Round: " + GameRound + "\n");
-                activePlayer = playerQueue.Peek();
+                activePlayer = playerQueue.Peek(); //Nästa spelare i queue blir aktiv spelare
                 
 
-                while (activePlayer.PlayerCards.Count < 3)
+                while (activePlayer.PlayerCards.Count < 3) // Om aktiv spelare har mindre en tre kort.....
                 {
-                    activePlayer.PlayerCards.Add(cardPile.Pop());
+                    activePlayer.PlayerCards.Add(cardPile.Pop()); //..... då dra ett kort till du har tre
                     Console.WriteLine(activePlayer.Name + " drog ett kort");
-                    //activePlayer.PlayerCards.Add(new PlayCard("2111"));
+                    
 
                 }
 
-                
-                DrawRow();
+                DrawRow(); // En metod för att bara rita en rad
                 Console.WriteLine("\tSpelplan:");
-                TestDrawGameFeild(gameField);
+                DrawGameFeild(gameField);
                 Console.WriteLine(" (Active tunnels: " + tunnelOpenings.Count + ")");
                 DrawRow();
 
-                
 
                 if (tunnelOpenings.Count <= 0)
                 {
@@ -212,10 +203,19 @@ namespace Bandito_textbaserat
 
                 switch (playerState)
                 {
+                    case State.AwaitingNextPlayer:
+                        {
+                            Console.Clear();
+                            Console.WriteLine("\n\nAwaiting next player: " + activePlayer.Name + "\nPress [N] when ready");
+                            AwaitingNextPlayer();
+                            Console.Clear();
+                            break;
+                        }
+
                     case State.AskWhatToDo:
                         {
                             Console.WriteLine("\tDin hand:");
-                            SkrivTestPlayerhand(activePlayer);
+                            DrawPlayerHand(activePlayer);
                             DrawRow();
                             AskWhatToDo();
                             break;
@@ -224,7 +224,7 @@ namespace Bandito_textbaserat
                     case State.WhichCard:
                         {
                             Console.WriteLine("\tDin hand:");
-                            SkrivTestPlayerhand(activePlayer);
+                            DrawPlayerHand(activePlayer);
                             DrawRow();
                             WhichCard();
                             
@@ -233,7 +233,7 @@ namespace Bandito_textbaserat
                     case State.WhatDoWithCard:
                         {
                             Console.WriteLine("\tSecelcted card:");
-                            SkrivTestPlayerhand(activePlayer, true);
+                            DrawPlayerHand(activePlayer, true);
                             DrawRow();
                             WhatDoWithCard();
                             break;
@@ -241,7 +241,7 @@ namespace Bandito_textbaserat
                     case State.WhichDirectionRotate:
                         {
                             Console.WriteLine("\tSecelcted card:");
-                            SkrivTestPlayerhand(activePlayer, true);
+                            DrawPlayerHand(activePlayer, true);
                             DrawRow();
                             WhichDirectionRotate(selectedCard);
                             break;
@@ -249,7 +249,7 @@ namespace Bandito_textbaserat
                     case State.WherePlaceCard:
                         {
                             Console.WriteLine("\tSecelcted card:");
-                            SkrivTestPlayerhand(activePlayer, true);
+                            DrawPlayerHand(activePlayer, true);
                             DrawRow();
 
                             if (WherePlaceCard(selectedCard))
@@ -288,6 +288,14 @@ namespace Bandito_textbaserat
             Console.ReadKey();
         }
 
+        static void AwaitingNextPlayer()
+        {
+            string input = Console.ReadLine();
+            if (input.ToUpper() == "N")
+            {
+                playerState = State.AskWhatToDo;
+            }
+        }
         static void WriteInvalid(string resson)
         {
             Console.Clear();
@@ -323,7 +331,7 @@ namespace Bandito_textbaserat
         static void NextPlayer()
         {
             playerQueue.Enqueue(playerQueue.Dequeue());
-            playerState = State.AskWhatToDo;
+            playerState = useAwaitingNextPlayer ? State.AwaitingNextPlayer : State.AskWhatToDo;
             GameRound++;
         }
 
@@ -424,8 +432,8 @@ namespace Bandito_textbaserat
             else
             {
                 int index = int.Parse(input) - 1;
-                string xCordinate = (tunnelOpenings[index].Substring(0, 1));
-                string yCordinate = (tunnelOpenings[index].Substring(1, 1));
+                string xCordinate = tunnelOpenings[index].Substring(0, 1);
+                string yCordinate = tunnelOpenings[index].Substring(1, 1);
                 PlayCard selectedPlaycard = activePlayer.PlayerCards[selectedCard];
                 if (PlaceCard(selectedPlaycard.TunnelId + xCordinate + yCordinate))
                 {
@@ -449,7 +457,7 @@ namespace Bandito_textbaserat
             Console.WriteLine(new string('-', consoleWidth)); // Skriver en linje över hela bredden
 
         }
-        static void SkrivTestPlayerhand(Player player, bool onlySelectedCard = false)
+        static void DrawPlayerHand(Player player, bool onlySelectedCard = false)
         {
             if ( !onlySelectedCard)
             {
@@ -475,12 +483,12 @@ namespace Bandito_textbaserat
             
         }
 
-        static void TestDrawGameFeild(string[,] gameField)
+        static void DrawGameFeild(string[,] gameField)
         {
             
 
-            int nummerTunnlar = 1;
-            tunnelOpenings.Clear();
+            int numberOfTunnelOpening = 1; //Både antalet av öpnna tunnlar, men också för att numrera tunnel öpningarna för spelaren
+            tunnelOpenings.Clear(); // Tömer listan för öppna tunlar för att sedan fylla på på nytt
             
             int numRows = gameField.GetLength(0);
             int numCols = gameField.GetLength(1);
@@ -489,9 +497,8 @@ namespace Bandito_textbaserat
             string[] consoleLines = new string[3];
 
 
-            // Skapa en lista som håller reda på om en kolumn är helt null
+            // Skapa en lista som håller reda på om en kolumn är helt null. Detta så att den inte skriver ut en hel columb i onödan om hela är tom 
             bool[] isColumnNull = new bool[numCols];
-
             for (int i = 0; i < numCols; i++)
             {
                 bool columnIsNull = true;
@@ -507,11 +514,14 @@ namespace Bandito_textbaserat
             }
 
 
+
+            // Rensa varje rad bara så att det inte finns något gamalt kvar.
             for (int lineCheck = 0; lineCheck < 3; lineCheck++)
             {
-                // Rensa varje rad
+                
                 consoleLines[lineCheck] = "";
             }
+
 
             // Bygg hela raden för varje rad i gameField
             for (int j = 0; j < numRows; j++)
@@ -534,27 +544,23 @@ namespace Bandito_textbaserat
                     //    continue;
                     //}
 
-                    if (cell == null)
+                    if (cell == null) // Hela tomma culumber har redan hoppats över, denna är till för de tomma cellerna i en culumb/rad som inte är helt tom, bara så att alting ligger på rätt ställa
                     {
-                        //if (i < numCols - 2 && gameField[j, i + 1] == "O" && gameField[j, i + 2] == null)
-                        {
-                            top = "   ";
-                            middle = "   ";
-                            bottom = "   ";
-                        }
-                        
+
+                        top = "   ";
+                        middle = "   ";
+                        bottom = "   ";
 
                     }
 
-                    else if (cell == "O")
+                    else if (cell == "O") // Om en cell är "O" har den markerats som en tunnelöpning, inte ett kort faktiskt spelkort utom de cellerna tunnlarna går till
                     {
-                        // Bygg en kvadrat med '1' i mitten
+                        // Bygg en kvadrat med numret av tunnelöpningen i mitten
                         top = "|" + "-" + "|";
-                        middle = "|" + nummerTunnlar + "|";
+                        middle = "|" + numberOfTunnelOpening + "|";
                         bottom = "|" + "-" + "|";
                         tunnelOpenings.Add(j + "" + i);
-                        //Console.WriteLine(tunnelOpenings[nummerTunnlar - 1]);
-                        nummerTunnlar++;
+                        numberOfTunnelOpening++;
                         
                         
                         
@@ -586,12 +592,13 @@ namespace Bandito_textbaserat
 
         }
 
-        static string[] GetCellData(string cellId, bool devide = false)
+        static string[] GetCellData(string cellId, bool devide = false) //Anelding att jag tog ut det ur DrawGameFeild() och gjore det till en metod var att jag ville använda den för DrawPlayerHand() med 
         {
-            string tmp = "#";
+            string tmp = "#"; // vad "väggar" ska markeras som
             string[] consoleLines = new string[3];
             // Bygg den horisontella raden för cellen
-            consoleLines[0] = tmp + (cellId.Substring(0, 1) == "2" ? " " : tmp) + tmp;
+                //Hörnen på ett kort är alltid väggar så dem är bara tmp. Mitten är allid öppen. Men det är de fyra vädersträcken som ska kollas om det är "2" vilket gör dem till en öppning, annars är det "1" vilket betyder vägg
+            consoleLines[0] = tmp + (cellId.Substring(0, 1) == "2" ? " " : tmp) + tmp; 
             consoleLines[1] = (cellId.Substring(3, 1) == "2" ? " " : tmp) + " " + (cellId.Substring(1, 1) == "2" ? " " : tmp);
             consoleLines[2] = tmp + (cellId.Substring(2, 1) == "2" ? " " : tmp) + tmp;
             if (devide == true)
@@ -599,6 +606,7 @@ namespace Bandito_textbaserat
                 for (int l = 0; l < consoleLines.Length; l++)
                 {
                     consoleLines[l] += " | ";
+                    consoleLines[l] = consoleLines[l].Insert(0, " | ");
                 }
             }
             return consoleLines;
@@ -819,7 +827,7 @@ namespace Bandito_textbaserat
 
         static bool IsValidInput(string input, bool onlyText, string inputInterval = "")
         {
-            if (string.IsNullOrEmpty(input))
+            if (string.IsNullOrEmpty(input) || input.Length > 10)
             {
                 return false; // Om input är null eller tom, returnera false
             }
