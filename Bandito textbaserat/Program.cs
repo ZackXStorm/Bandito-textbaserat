@@ -66,9 +66,33 @@ namespace Bandito_textbaserat
 
             }
 
+            //frågar om spelaren vill ha random kort eller förbesämda 
+            bool useRandomCards; // Om spelarna vill använda random kort
+            while (true)
+            {
+                Console.WriteLine("Do you want to use random cards? \n[Y]es\n[N]o");
+                string input = Console.ReadLine();
+                if (input.ToUpper() == "Y")
+                {
+                    useRandomCards = true;
+                    break;
+                }
 
-            
-            
+                if (input.ToUpper() == "N")
+                {
+                    useRandomCards = false;
+                    break;
+                }
+                Console.Clear();
+                WriteInvalid("Invalid input");
+            }
+            Console.Clear();
+
+
+            //Create card pile
+            cardPile = CreateCardPile(useRandomCards);
+
+
             // Ask input of player count
             while (true)
             {
@@ -131,34 +155,6 @@ namespace Bandito_textbaserat
             }
             Console.Clear();
 
-
-
-            //frågar om spelaren vill ha random kort eller förbesämda 
-            bool useRandomCards; // Om spelarna vill använda random kort
-            while (true)
-            {
-                Console.WriteLine("Do you want to use random cards? \n[Y]es\n[N]o"); 
-                string input = Console.ReadLine();
-                if (input.ToUpper() == "Y")
-                {
-                    useRandomCards = true;
-                    break;
-                }
-
-                if (input.ToUpper() == "N")
-                {
-                    useRandomCards = false;
-                    break;
-                }
-                Console.Clear();
-                WriteInvalid("Invalid input");
-            }
-            Console.Clear();
-
-
-            //Create card pile
-            cardPile = CreateCardPile(useRandomCards);
-            
 
             //Create players and player queue
             playerQueue = new Queue<Player>();
