@@ -182,7 +182,7 @@ namespace Bandito_textbaserat
                         tmpQue.Add(new Player(input));
                         break;
                     }
-                    WriteInvalid("Invalid input");
+                    WriteInvalid("Name already taken");
                 }
 
 
