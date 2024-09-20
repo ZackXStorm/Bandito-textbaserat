@@ -131,10 +131,34 @@ namespace Bandito_textbaserat
             }
             Console.Clear();
 
+
+
+            //frågar om spelaren vill ha random kort eller förbesämda 
+            bool useRandomCards; // Om spelarna vill använda random kort
+            while (true)
+            {
+                Console.WriteLine("Do you want to use random cards? \n[Y]es\n[N]o"); 
+                string input = Console.ReadLine();
+                if (input.ToUpper() == "Y")
+                {
+                    useRandomCards = true;
+                    break;
+                }
+
+                if (input.ToUpper() == "N")
+                {
+                    useRandomCards = false;
+                    break;
+                }
+                Console.Clear();
+                WriteInvalid("Invalid input");
+            }
+            Console.Clear();
+
+
             //Create card pile
-            cardPile = CreateCardPile();
-
-
+            cardPile = CreateCardPile(useRandomCards);
+            
 
             //Create players and player queue
             playerQueue = new Queue<Player>();
@@ -738,7 +762,7 @@ namespace Bandito_textbaserat
                         case 0:
                             {
                                 //Kollar cellen åvan
-                                gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] = gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))];
+                                gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] = gameField[int.Parse(placedCard.Substring(4, 1)) - 1, int.Parse(placedCard.Substring(5, 1))] ?? "O";
 
                                 
                                 break;
@@ -747,7 +771,7 @@ namespace Bandito_textbaserat
                         case 1:
                             {
                                 //Cellen till höger
-                                gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] = gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1];
+                                gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] = gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) + 1] ?? "O";
 
                                 
                                 break;
@@ -755,7 +779,7 @@ namespace Bandito_textbaserat
                         case 2:
                             {
                                 //Cellen nedanför
-                                gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] = gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))];
+                                gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] = gameField[int.Parse(placedCard.Substring(4, 1)) + 1, int.Parse(placedCard.Substring(5, 1))] ?? "O";
 
                                 
                                 break;
@@ -763,7 +787,7 @@ namespace Bandito_textbaserat
                         case 3:
                             {
                                 //Cellen till höger
-                                gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] = gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] == null ? "O" : gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1];
+                                gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] = gameField[int.Parse(placedCard.Substring(4, 1)), int.Parse(placedCard.Substring(5, 1)) - 1] ?? "O";
 
                                 
                                 break;
@@ -784,14 +808,43 @@ namespace Bandito_textbaserat
             Environment.Exit(0);
         }
 
-        static Stack<PlayCard> CreateCardPile()
+        static Stack<PlayCard> CreateCardPile(bool useRandomcards)
         {
             List<PlayCard> cardPile = new List<PlayCard>(); //Det är samma anledning här som med playerQueue: OrderBy fungerar bara på en list men jag vill använda en Stack för spelhögen då det passar bäst som det
 
-            for (int i =0; i < 69; i++)
+            // I vilket fall kommer cardpile att ha mer en 69 kort i sig som spelreglerna säger, men som du kanske märker är det dubbla antalet här. det är för att jag delat up alla rektanglar i kvadrater, så tekniskt sätt är det fortfarande lika många tunlar
+            if (useRandomcards) // Alla kort är random 
             {
-                PlayCard card = CreateCard();
-                cardPile.Add(card);
+                for (int i = 0; i < 138; i++)
+                {
+                    PlayCard card = CreateRandomCard();
+                    cardPile.Add(card);
+                }
+            }
+            else //Förbesämda kort
+            {
+                for (int i = 0;i < 38 ; i++)
+                {
+                    cardPile.Add(new PlayCard("2211")); //Skarp sväng
+                }
+                for (int i = 0; i < 21; i++)
+                {
+                    cardPile.Add(new PlayCard("2111")); //End card
+                }
+                for (int i = 0; i < 51; i++)
+                {
+                    cardPile.Add(new PlayCard("1222")); // T korsning
+                }
+                for (int i = 0; i < 19; i++)
+                {
+                    cardPile.Add(new PlayCard("1212")); //Rak väg
+                }
+                for (int i = 0; i < 9; i++)
+                {
+                    cardPile.Add(new PlayCard("2222")); // + korsning
+                }
+                
+
             }
             
             cardPile = cardPile.OrderBy(x => r.Next()).ToList(); //Random ordning
@@ -799,7 +852,7 @@ namespace Bandito_textbaserat
             return new Stack<PlayCard>(cardPile);
         }
 
-        static PlayCard CreateCard() // ###### Läg till korten
+        static PlayCard CreateRandomCard() // ###### Läg till korten
         {
             
             string tmp = "";
