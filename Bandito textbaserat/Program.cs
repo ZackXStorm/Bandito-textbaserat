@@ -214,13 +214,15 @@ namespace Bandito_textbaserat
                 activePlayer = playerQueue.Peek(); //Nästa spelare i queue blir aktiv spelare
                 
 
-                while (activePlayer.PlayerCards.Count < 3) // Om aktiv spelare har mindre en tre kort.....
+                while (activePlayer.PlayerCards.Count < 3 && cardPile.Count > 0) // Om aktiv spelare har mindre en tre kort.....
                 {
+                    
                     activePlayer.PlayerCards.Add(cardPile.Pop()); //..... då dra ett kort till du har tre
                     Console.WriteLine(activePlayer.Name + " drog ett kort");
                     
 
                 }
+                
 
                 DrawRow(); // En metod för att bara rita en rad
                 Console.WriteLine("\tSpelplan:");
@@ -233,6 +235,8 @@ namespace Bandito_textbaserat
                 {
                     break; // Går ut ur while loopen vilket visar vinnar texten
                 }
+                
+                
 
                 switch (playerState)
                 {
@@ -339,9 +343,12 @@ namespace Bandito_textbaserat
         }
         static void AskWhatToDo()
         {
-            string menuString = "[D]raw cards\n[S]elect card to play";
+            string menuString = "[D]raw cards";
+            bool hasCards = activePlayer.PlayerCards.Count > 0;
+            if (hasCards) menuString += "\n[S]elect card to play";
             Console.WriteLine(menuString); 
             string input = Console.ReadLine();
+            
             if (input.ToUpper() == "D") //"Draw cards" är för om spelaren inte kan lägga, vilket då gör att....
             {
                 Console.Clear();
@@ -352,7 +359,7 @@ namespace Bandito_textbaserat
                 Console.WriteLine("Nästa spelare");
                 return;
             }
-            if (input.ToUpper() == "S")
+            if (input.ToUpper() == "S" && hasCards)
             {
                 Console.Clear();
                 playerState = State.WhichCard;
@@ -708,7 +715,7 @@ namespace Bandito_textbaserat
 
                 // Kontrollera cellen ovanför genom att jämnföra sifran som pekar ner på det kortet över [2] mot sifran som pekar uppåt på kortet under [0]
                 string cellAbove = gameField[xCordinate - 1, yCordinate];
-                if (cellAbove != null && cellAbove.Substring(2, 1) != tunnelId.Substring(0, 1))
+                if (cellAbove != null && cellAbove !="O" && cellAbove.Substring(2, 1) != tunnelId.Substring(0, 1))
                 {
                     
                     return false;
@@ -716,7 +723,7 @@ namespace Bandito_textbaserat
 
                 // Kontrollera cellen till vänster
                 string cellLeft = gameField[xCordinate, yCordinate - 1];
-                if (cellLeft != null && cellLeft.Substring(1, 1) != tunnelId.Substring(3, 1))
+                if (cellLeft != null && cellLeft != "O" && cellLeft.Substring(1, 1) != tunnelId.Substring(3, 1))
                 {
                     
                     return false;
@@ -724,7 +731,7 @@ namespace Bandito_textbaserat
 
                 // Kontrollera cellen nedanför
                 string cellBelow = gameField[xCordinate + 1, yCordinate];
-                if (cellBelow != null && cellBelow.Substring(0, 1) != tunnelId.Substring(2, 1))
+                if (cellBelow != null && cellBelow != "O"  && cellBelow.Substring(0, 1) != tunnelId.Substring(2, 1))
                 {
                     
                     return false;
@@ -732,7 +739,7 @@ namespace Bandito_textbaserat
 
                 // Kontrollera cellen till höger
                 string cellRight = gameField[xCordinate, yCordinate + 1];
-                if (cellRight != null && cellRight.Substring(3, 1) != tunnelId.Substring(1, 1))
+                if (cellRight != null && cellRight != "O" && cellRight.Substring(3, 1) != tunnelId.Substring(1, 1))
                 {
                    
                     return false;
